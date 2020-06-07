@@ -33,35 +33,13 @@ constexpr uint8_t UINT8_MAX = 0xFFU;
 constexpr uint16_t UINT16_MAX = 0xFFFFU;
 #endif
 
-#ifndef AYAB_TESTS
-/*!
- * \brief Wrapper for knitter's isr.
- *
- * This is needed since a non-static method cannot be
- * passed to _attachInterrupt_.
- */
-void isr_wrapper() {
-  extern Knitter *knitter;
-  knitter->isr();
-}
-#endif
-
 /*!
  * \brief Knitter constructor.
  *
  * Initializes the solenoids as well as pins and interrupts.
  */
-Knitter::Knitter() : m_beeper(), m_serial_encoding() {
-
-  pinMode(ENC_PIN_A, INPUT);
-#ifndef AYAB_TESTS
-  // Attaching ENC_PIN_A(=2), Interrupt No. 0
-  attachInterrupt(0, isr_wrapper, CHANGE);
-#endif
-
-  pinMode(ENC_PIN_B, INPUT);
-  pinMode(ENC_PIN_C, INPUT);
-
+Knitter::Knitter()
+    : m_beeper(), m_encoders(), m_serial_encoding(), m_solenoids() {
   pinMode(LED_PIN_A, OUTPUT);
   pinMode(LED_PIN_B, OUTPUT);
   digitalWrite(LED_PIN_A, 1);
@@ -70,8 +48,6 @@ Knitter::Knitter() : m_beeper(), m_serial_encoding() {
 #if DBG_NOMACHINE
   pinMode(DBG_BTN_PIN, INPUT);
 #endif
-
-  m_solenoids.init();
 }
 
 auto Knitter::getState() -> OpState_t {

@@ -43,17 +43,12 @@ protected:
   Knitter *k;
 
   void expect_constructor() {
-    EXPECT_CALL(*arduinoMock, pinMode(ENC_PIN_A, INPUT));
-    EXPECT_CALL(*arduinoMock, pinMode(ENC_PIN_B, INPUT));
-    EXPECT_CALL(*arduinoMock, pinMode(ENC_PIN_C, INPUT));
 
     EXPECT_CALL(*arduinoMock, pinMode(LED_PIN_A, OUTPUT));
     EXPECT_CALL(*arduinoMock, pinMode(LED_PIN_B, OUTPUT));
 
     EXPECT_CALL(*arduinoMock, digitalWrite(LED_PIN_A, 1));
     EXPECT_CALL(*arduinoMock, digitalWrite(LED_PIN_B, 1));
-
-    EXPECT_CALL(*solenoidsMock, init);
   }
 
   // TODO(sl): m_position is only uint8_t, should it be bigger?

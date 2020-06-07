@@ -16,6 +16,9 @@ void releaseEncodersMock() {
   }
 }
 
+Encoders::Encoders() {
+}
+
 void Encoders::encA_interrupt() {
   assert(gEncodersMock != NULL);
   gEncodersMock->encA_interrupt();

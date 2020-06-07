@@ -20,9 +20,7 @@
  *    Modified Work Copyright 2020 Sturla Lange
  *    http://ayab-knitting.com
  */
-
-#ifndef ENCODERS_H_
-#define ENCODERS_H_
+#pragma once
 
 #include <Arduino.h>
 
@@ -71,7 +69,7 @@ using Beltshift_t = enum Beltshift;
  */
 class Encoders {
 public:
-  Encoders() = default;
+  Encoders();
 
   void encA_interrupt();
 
@@ -94,5 +92,3 @@ private:
   void encA_rising();
   void encA_falling();
 };
-
-#endif // ENCODERS_H_

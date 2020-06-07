@@ -26,6 +26,10 @@
 #include "beeper.h"
 #include "board.h"
 
+Beeper::Beeper() {
+  pinMode(PIEZO_PIN, OUTPUT);
+}
+
 /*!
  * Beep to indicate readiness
  */

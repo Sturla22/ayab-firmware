@@ -20,13 +20,9 @@
  *    Modified Work Copyright 2020 Sturla Lange
  *    http://ayab-knitting.com
  */
-
-#ifndef KNITTER_H_
-#define KNITTER_H_
+#pragma once
 
 #include <Arduino.h>
-
-#include <PacketSerial.h>
 
 #include "beeper.h"
 #include "encoders.h"
@@ -78,10 +74,10 @@ public:
   void onPacketReceived(const uint8_t *buffer, size_t size);
 
 private:
-  Solenoids m_solenoids;
-  Encoders m_encoders;
   Beeper m_beeper;
+  Encoders m_encoders;
   SerialEncoding m_serial_encoding;
+  Solenoids m_solenoids;
 
   OpState_t m_opState = s_init;
 
@@ -126,5 +122,3 @@ private:
   void reqLine(uint8_t lineNumber);
   void indState(bool initState = false);
 };
-
-#endif // KNITTER_H_

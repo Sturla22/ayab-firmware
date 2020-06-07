@@ -31,10 +31,6 @@ protected:
 TEST_F(SolenoidsTest, test_construct) {
 }
 
-TEST_F(SolenoidsTest, test_init) {
-  s.init();
-}
-
 TEST_F(SolenoidsTest, test_setSolenoid) {
   s.setSolenoid(1, true);
   s.setSolenoid(1, false);
