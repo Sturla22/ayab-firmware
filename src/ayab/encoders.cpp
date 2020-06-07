@@ -25,6 +25,30 @@
 
 #include "board.h"
 #include "encoders.h"
+#include "knitter.h"
+
+#ifndef AYAB_TESTS
+/*!
+ * \brief Wrapper for knitter's isr.
+ *
+ * This is needed since a non-static method cannot be
+ * passed to _attachInterrupt_.
+ */
+void isr_wrapper() {
+  extern Knitter *knitter;
+  knitter->isr();
+}
+#endif
+
+Encoders::Encoders() {
+#ifndef AYAB_TESTS
+  // Attaching ENC_PIN_A(=2), Interrupt No. 0
+  attachInterrupt(0, isr_wrapper, CHANGE);
+#endif
+  pinMode(ENC_PIN_A, INPUT);
+  pinMode(ENC_PIN_B, INPUT);
+  pinMode(ENC_PIN_C, INPUT);
+}
 
 /*!
  * \brief Encoder A interrupt service routine.

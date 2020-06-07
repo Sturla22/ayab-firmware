@@ -9,7 +9,7 @@ class BeeperTest : public ::testing::Test {
 protected:
   void SetUp() override {
     arduinoMock = arduinoMockInstance();
-    b = Beeper();
+    b = new Beeper();
   }
 
   void TearDown() override {
@@ -24,20 +24,20 @@ protected:
   }
 
   ArduinoMock *arduinoMock;
-  Beeper b;
+  Beeper *b;
 };
 
 TEST_F(BeeperTest, test_ready) {
   checkBeepTime(5);
-  b.ready();
+  b->ready();
 }
 
 TEST_F(BeeperTest, test_finishedLine) {
   checkBeepTime(3);
-  b.finishedLine();
+  b->finishedLine();
 }
 
 TEST_F(BeeperTest, test_endWork) {
   checkBeepTime(10);
-  b.endWork();
+  b->endWork();
 }

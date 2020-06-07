@@ -1,4 +1,3 @@
-#pragma once
 /*!
  * \file beeper.h
  *
@@ -21,6 +20,8 @@
  *    Modified Work Copyright 2020 Sturla Lange
  *    http://ayab-knitting.com
  */
+#pragma once
+
 #include <Arduino.h>
 
 constexpr uint8_t BEEP_DELAY = 50U; // ms
@@ -38,7 +39,7 @@ constexpr uint8_t BEEP_NO_DUTY = 255U;
  */
 class Beeper {
 public:
-  Beeper() = default;
+  Beeper();
 
   static void ready();
   static void finishedLine();

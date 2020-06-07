@@ -9,6 +9,9 @@ BeeperMock *beeperMockInstance() {
   return gBeeperMock;
 }
 
+Beeper::Beeper() {
+}
+
 void releaseBeeperMock() {
   if (gBeeperMock) {
     delete gBeeperMock;
@@ -20,10 +23,12 @@ void Beeper::ready() {
   assert(gBeeperMock != NULL);
   gBeeperMock->ready();
 }
+
 void Beeper::finishedLine() {
   assert(gBeeperMock != NULL);
   gBeeperMock->finishedLine();
 }
+
 void Beeper::endWork() {
   assert(gBeeperMock != NULL);
   gBeeperMock->endWork();
