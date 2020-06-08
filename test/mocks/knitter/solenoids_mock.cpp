@@ -16,6 +16,15 @@ void releaseSolenoidsMock() {
   }
 }
 
+Solenoids::Solenoids()
+#if defined(HARD_I2C)
+    : mcp_0(), mcp_1()
+#elif defined(SOFT_I2C)
+    : SoftI2C(A4, A5)
+#endif
+{
+}
+
 void Solenoids::setSolenoid(uint8_t solenoid, bool state) {
   assert(gSolenoidsMock != NULL);
   gSolenoidsMock->setSolenoid(solenoid, state);

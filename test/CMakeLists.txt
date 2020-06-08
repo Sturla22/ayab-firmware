@@ -29,6 +29,7 @@ set(COMMON_INCLUDES
     ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest/googletest/include
     ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest/googlemock/include
     ${PROJECT_SOURCE_DIR}/mocks
+    ${PROJECT_SOURCE_DIR}/mocks/arduino
     ${SOURCE_DIRECTORY}
     ${LIBRARY_DIRECTORY}/PacketSerial/src
     )
@@ -80,7 +81,7 @@ set(SOFT_I2C_LIB
     ${LIBRARY_DIRECTORY}/SoftI2CMaster/SoftI2CMaster.cpp
     )
 function(add_machine machine board)
-    if(${board}=="Uno")
+  if(${board} STREQUAL "Uno")
         set(processor
             __AVR_ATmega168__
             )
@@ -145,7 +146,7 @@ target_compile_definitions(${PROJECT_NAME}_knitter
     PRIVATE
     ${COMMON_DEFINES}
     KH910 # should not matter which one is chosen for knitter
-    __AVR_ATmega1280__ # should not matter which one is chosen for knitter
+    __AVR_ATmega328P__ # should not matter which one is chosen for knitter
 )
 target_compile_options(${PROJECT_NAME}_knitter PRIVATE
     ${COMMON_FLAGS}
@@ -155,6 +156,44 @@ target_link_libraries(${PROJECT_NAME}_knitter
 )
 add_dependencies(${PROJECT_NAME}_knitter arduino_mock)
 
+# Integration tests (only mock the arduino itself)
+add_executable(${PROJECT_NAME}_integration
+    ${PROJECT_SOURCE_DIR}/test_all.cpp
+    ${PROJECT_SOURCE_DIR}/test_integration.cpp
+    ${SOURCE_DIRECTORY}/main.cpp
+    ${SOURCE_DIRECTORY}/knitter.cpp
+    ${SOURCE_DIRECTORY}/beeper.cpp
+    ${SOURCE_DIRECTORY}/solenoids.cpp
+    ${SOURCE_DIRECTORY}/encoders.cpp
+    ${SOURCE_DIRECTORY}/serial_encoding.cpp
+    ${HARD_I2C_LIB}
+    )
+target_include_directories(${PROJECT_NAME}_integration
+    PRIVATE
+    ${ARDUINO_MOCK_INCLUDE_DIRS}
+    ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest/googletest/include
+    ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest/googlemock/include
+    ${SOURCE_DIRECTORY}
+    ${PROJECT_SOURCE_DIR}/mocks/arduino
+    ${LIBRARY_DIRECTORY}/PacketSerial/src
+    ${EXTERNAL_LIB_INCLUDES}
+)
+target_compile_definitions(${PROJECT_NAME}_integration
+    PRIVATE
+    ${COMMON_DEFINES}
+    KH930
+    __AVR_ATmega328P__
+)
+target_compile_options(${PROJECT_NAME}_integration PRIVATE
+    ${COMMON_FLAGS}
+)
+target_link_libraries(${PROJECT_NAME}_integration
+    ${COMMON_LINKER_FLAGS}
+)
+add_dependencies(${PROJECT_NAME}_integration arduino_mock)
+
+
+
 # TODO(sl): Use gtest_discover_tests() ?
 # https://cmake.org/cmake/help/git-master/module/GoogleTest.html
 enable_testing()
@@ -163,3 +202,4 @@ add_test(test_KH910_Uno ${PROJECT_NAME}_KH910_Uno)
 add_test(test_KH930_Mega ${PROJECT_NAME}_KH930_Mega)
 add_test(test_KH910_Mega ${PROJECT_NAME}_KH910_Mega)
 add_test(test_knitter ${PROJECT_NAME}_knitter)
+add_test(test_integration ${PROJECT_NAME}_integration)

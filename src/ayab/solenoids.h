@@ -41,24 +41,7 @@ constexpr uint8_t SOLENOIDS_I2C_ADDRESS_MASK = 0x20U;
  */
 class Solenoids {
 public:
-  Solenoids()
-#if defined(HARD_I2C)
-      : mcp_0(), mcp_1()
-#elif defined(SOFT_I2C)
-      : SoftI2C(A4, A5)
-#endif
-  {
-#ifdef HARD_I2C
-    mcp_0.begin(I2Caddr_sol1_8);
-    mcp_1.begin(I2Caddr_sol9_16);
-
-    for (int i = 0; i < (SOLENOIDS_NUM / 2); i++) {
-      mcp_0.pinMode(i, OUTPUT);
-      mcp_1.pinMode(i, OUTPUT);
-    }
-#endif
-    // No Action needed for SOFT_I2C
-  }
+  Solenoids();
 
   void setSolenoid(uint8_t solenoid, bool state);
   void setSolenoids(uint16_t state);
