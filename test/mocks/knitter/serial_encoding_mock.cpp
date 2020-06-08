@@ -33,3 +33,16 @@ void SerialEncoding::onPacketReceived(const uint8_t *buffer, size_t size) {
   assert(gSerialEncodingMock != nullptr);
   gSerialEncodingMock->onPacketReceived(buffer, size);
 }
+
+void SerialEncoding::requestLine(const uint8_t lineNumber) {
+  assert(gSerialEncodingMock != nullptr);
+  gSerialEncodingMock->requestLine(lineNumber);
+}
+
+void SerialEncoding::indicateState(uint8_t initState, uint16_t leftHallValue,
+                                   uint16_t rightHallValue, uint8_t carriage,
+                                   uint8_t position, uint8_t direction) {
+  assert(gSerialEncodingMock != nullptr);
+  gSerialEncodingMock->indicateState(initState, leftHallValue, rightHallValue,
+                                     carriage, position, direction);
+}

@@ -57,6 +57,10 @@ public:
   void update();
   void send(uint8_t *payload, size_t length);
   void onPacketReceived(const uint8_t *buffer, size_t size);
+  void requestLine(const uint8_t lineNumber);
+  void indicateState(uint8_t initState, uint16_t leftHallValue,
+                     uint16_t rightHallValue, uint8_t carriage,
+                     uint8_t position, uint8_t direction);
 
 private:
   SLIPPacketSerial m_packetSerial;
