@@ -99,3 +99,15 @@ TEST_F(SerialEncodingTest, test_send) {
   uint8_t p[] = {1, 2, 3};
   s->send(p, 3);
 }
+
+TEST_F(SerialEncodingTest, test_requestline) {
+  EXPECT_CALL(*serialMock, write(_, _));
+  EXPECT_CALL(*serialMock, write(SLIP::END));
+  s->requestLine(0);
+}
+
+TEST_F(SerialEncodingTest, test_indicateState) {
+  EXPECT_CALL(*serialMock, write(_, _));
+  EXPECT_CALL(*serialMock, write(SLIP::END));
+  s->indicateState(0, 0, 0, 0, 0, 0);
+}

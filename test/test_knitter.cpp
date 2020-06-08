@@ -88,12 +88,8 @@ protected:
     expected_isr(1);
   }
 
-  template <int times = 1> void expect_send() {
-    EXPECT_CALL(*serialEncodingMock, send).Times(times);
-  }
-
   template <int times = 1> void expect_indState() {
-    expect_send<times>();
+    EXPECT_CALL(*serialEncodingMock, indicateState).Times(times);
     EXPECT_CALL(*encodersMock, getHallValue(Left)).Times(times);
     EXPECT_CALL(*encodersMock, getHallValue(Right)).Times(times);
     EXPECT_CALL(*encodersMock, getDirection).Times(times);
@@ -133,7 +129,7 @@ protected:
       get_to_operate();
       EXPECT_CALL(*arduinoMock, delay(2000));
       EXPECT_CALL(*beeperMock, finishedLine);
-      expect_send();
+      EXPECT_CALL(*serialEncodingMock, requestLine);
     }
     EXPECT_CALL(*arduinoMock, digitalWrite(LED_PIN_A, 1));
     expected_fsm();
@@ -164,7 +160,7 @@ TEST_F(KnitterTest, test_constructor) {
  */
 TEST_F(KnitterTest, test_send) {
   uint8_t p[] = {1, 2, 3, 4, 5};
-  expect_send();
+  EXPECT_CALL(*serialEncodingMock, send);
   k->send(p, 5);
 }
 
@@ -298,7 +294,7 @@ TEST_F(KnitterTest, test_setNextLine) {
 
   // Wrong line number
   EXPECT_CALL(*beeperMock, finishedLine).Times(0);
-  expect_send();
+  EXPECT_CALL(*serialEncodingMock, requestLine);
   ASSERT_EQ(k->setNextLine(1), false);
 
   // Correct line number
@@ -334,10 +330,8 @@ TEST_F(KnitterTest, test_operate) {
   EXPECT_CALL(*beeperMock, finishedLine);
 
   // indState and send
-  expect_send<2>();
-  EXPECT_CALL(*encodersMock, getHallValue(Left));
-  EXPECT_CALL(*encodersMock, getHallValue(Right));
-  EXPECT_CALL(*encodersMock, getDirection);
+  expect_indState();
+  EXPECT_CALL(*serialEncodingMock, requestLine);
 
   EXPECT_CALL(*solenoidsMock, setSolenoid);
   expected_operate(false);
@@ -407,15 +401,13 @@ TEST_F(KnitterTest, test_operate_lastline) {
 TEST_F(KnitterTest, test_operate_lastline_and_no_req) {
   // Note probing lots of private data and methods to get full branch coverage.
   k->m_stopNeedle = 100;
-  uint8_t wanted_pixel = k->m_stopNeedle + END_OF_LINE_OFFSET_R + 1;
+  k->m_pixelToSet = k->m_stopNeedle + END_OF_LINE_OFFSET_R + 1;
   k->m_firstRun = false;
   k->m_direction = Left;
-  k->m_position = wanted_pixel + k->getStartOffset(Right);
   k->m_workedOnLine = true;
   k->m_lineRequested = false;
   k->m_lastLineFlag = true;
 
-  EXPECT_CALL(*arduinoMock, digitalWrite(LED_PIN_A, 1));
   EXPECT_CALL(*solenoidsMock, setSolenoid);
   EXPECT_CALL(*beeperMock, endWork);
   EXPECT_CALL(*solenoidsMock, setSolenoids(0xFFFF));
@@ -458,7 +450,7 @@ TEST_F(KnitterTest, test_operate_new_line) {
   EXPECT_CALL(*solenoidsMock, setSolenoid);
 
   // reqLine is called which calls send
-  expect_send();
+  EXPECT_CALL(*serialEncodingMock, requestLine);
   expected_operate(false);
 }
 

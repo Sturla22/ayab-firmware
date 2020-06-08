@@ -71,7 +71,9 @@ void Knitter::isr() {
 void Knitter::fsm() {
   switch (m_opState) {
   case s_init:
-    state_init();
+    if (init_guard()) {
+      state_init();
+    }
     break;
 
   case s_ready:
@@ -79,7 +81,20 @@ void Knitter::fsm() {
     break;
 
   case s_operate:
-    state_operate();
+    digitalWrite(LED_PIN_A, 1);
+
+    if (m_firstRun) {
+      m_firstRun = false;
+      m_currentLineNumber = first_operate(m_currentLineNumber + 1);
+    }
+
+#if DBG_NOMACHINE
+    debug_operate();
+#else
+    if (operate_guard()) {
+      state_operate();
+    }
+#endif
     break;
 
   case s_test:
@@ -124,8 +139,6 @@ auto Knitter::startOperation(uint8_t startNeedle, uint8_t stopNeedle,
                                        // be increased before request
       m_lineRequested = false;
       m_lastLineFlag = false;
-      // TODO(sl): Not used? Can be removed?
-      m_lastLinesCountdown = 2;
 
       Beeper::ready();
 
@@ -167,114 +180,118 @@ void Knitter::setLastLine() {
 
 /* Private Methods */
 
-void Knitter::state_init() {
+bool Knitter::init_guard() {
 #ifdef DBG_NOMACHINE
-  bool state = digitalRead(DBG_BTN_PIN);
-
   // TODO(Who?): Check if debounce is needed
-  if (m_prevState && !state) {
+  bool accept = (m_prevState && !digitalRead(DBG_BTN_PIN)) m_prevState = state;
+  return accept;
 #else
   // Machine is initialized when left hall sensor is passed in Right direction
-  if (Right == m_direction && Left == m_hallActive) {
+  return (Right == m_direction && Left == m_hallActive);
 #endif // DBG_NOMACHINE
-    m_opState = s_ready;
-    m_solenoids.setSolenoids(UINT16_MAX);
-    indState(true);
-  }
+}
 
-#ifdef DBG_NOMACHINE
-  m_prevState = state;
-#endif
+void Knitter::state_init() {
+  m_opState = s_ready;
+  m_solenoids.setSolenoids(UINT16_MAX);
+  indState(true);
 }
 
 void Knitter::state_ready() {
   digitalWrite(LED_PIN_A, 0);
   // This state is left when the startOperation() method
-  // is called successfully by main()
+  // is called successfully
 }
 
-void Knitter::state_operate() {
-  digitalWrite(LED_PIN_A, 1);
-
-  if (m_firstRun) {
-    m_firstRun = false;
-    // TODO(Who?): Optimize Delay for various Arduino Models
-    delay(START_OPERATION_DELAY);
-    Beeper::finishedLine();
-    reqLine(++m_currentLineNumber);
-  }
-
 #ifdef DBG_NOMACHINE
+void Knitter::debug_operate() {
   bool state = digitalRead(DBG_BTN_PIN);
 
   // TODO(Who?): Check if debounce is needed
-  if (m_prevState && !state) {
+  if (m_prevState != state) {
     if (!m_lineRequested) {
       reqLine(++m_currentLineNumber);
     }
   }
   m_prevState = state;
-#else
-  if (m_sOldPosition != m_position) {
-    // Only act if there is an actual change of position
-    // Store current Encoder position for next call of this function
-    m_sOldPosition = m_position;
+}
+#endif
 
+uint8_t Knitter::first_operate(uint8_t currentLineNumber) {
+  delay(START_OPERATION_DELAY);
+  Beeper::finishedLine();
+  reqLine(currentLineNumber);
+  return currentLineNumber;
+}
+
+static bool pixel_value(uint8_t *buffer, uint8_t pixelToSet) {
+  // Find the right byte from the currentLine array,
+  // then read the appropriate Pixel(/Bit) for the current needle to set
+  uint8_t currentByte = pixelToSet / 8U;
+  return bitRead(buffer[currentByte], pixelToSet - (8U * currentByte));
+}
+
+void Knitter::finishedWork() {
+  Beeper::endWork();
+  m_solenoids.setSolenoids(UINT16_MAX);
+  Beeper::finishedLine();
+}
+
+bool Knitter::isNewPosition() {
+  bool newPos = m_sOldPosition != m_position;
+  m_sOldPosition = m_position;
+  return newPos;
+}
+
+bool Knitter::operate_guard() {
+  bool accept = false;
+  // Only act if there is an actual change of position
+  if (isNewPosition()) {
     if (m_continuousReportingEnabled) {
       // Send current position to GUI
-      indState(true);
+      indState();
     }
+    accept = calculatePixelAndSolenoid();
+  }
+  return accept;
+}
 
-    if (!calculatePixelAndSolenoid()) {
-      // No valid/useful position calculated
+void Knitter::state_operate() {
+  // Inside of the active needles?
+  bool inside = (m_pixelToSet >= m_startNeedle - END_OF_LINE_OFFSET_L) &&
+                (m_pixelToSet <= m_stopNeedle + END_OF_LINE_OFFSET_R);
+
+  if (inside) {
+    if ((m_pixelToSet >= m_startNeedle) && (m_pixelToSet <= m_stopNeedle)) {
+      m_workedOnLine = true;
+    }
+    // Write Pixel state to the appropriate needle
+    bool pixelValue = pixel_value(m_lineBuffer, m_pixelToSet);
+    m_solenoids.setSolenoid(m_solenoidToSet, pixelValue);
+  } else {
+    // Reset Solenoids when out of range
+    m_solenoids.setSolenoid(m_solenoidToSet, true);
+
+    if (!m_workedOnLine) {
       return;
     }
 
-    if ((m_pixelToSet >= m_startNeedle - END_OF_LINE_OFFSET_L) &&
-        (m_pixelToSet <= m_stopNeedle + END_OF_LINE_OFFSET_R)) {
+    // Finished the line
+    m_workedOnLine = false;
 
-      if ((m_pixelToSet >= m_startNeedle) && (m_pixelToSet <= m_stopNeedle)) {
-        m_workedOnLine = true;
-      }
-
-      // Find the right byte from the currentLine array,
-      // then read the appropriate Pixel(/Bit) for the current needle to set
-      uint8_t currentByte = m_pixelToSet / 8U;
-      bool pixelValue =
-          bitRead(m_lineBuffer[currentByte], m_pixelToSet - (8U * currentByte));
-      // Write Pixel state to the appropriate needle
-      m_solenoids.setSolenoid(m_solenoidToSet, pixelValue);
-    } else { // Outside of the active needles
-      //  digitalWrite(LED_PIN_B, 0);
-
-      // Reset Solenoids when out of range
-      m_solenoids.setSolenoid(m_solenoidToSet, true);
-
-      if (m_workedOnLine) {
-        // already worked on the current line -> finished the line
-        m_workedOnLine = false;
-
-        if (!m_lineRequested && !m_lastLineFlag) {
-          // request new Line from Host
-          reqLine(++m_currentLineNumber);
-        } else if (m_lastLineFlag) {
-          Beeper::endWork();
-          m_opState = s_ready;
-          m_solenoids.setSolenoids(UINT16_MAX);
-          Beeper::finishedLine();
-        }
-      }
+    if (m_lastLineFlag) {
+      m_opState = s_ready;
+      finishedWork();
+      // TODO(sl): Reset m_firstRun to true? Or does that belong in
+      // startOperation?
+    } else if (!m_lineRequested) {
+      reqLine(++m_currentLineNumber);
     }
   }
-#endif // DBG_NOMACHINE
 }
 
 void Knitter::state_test() {
-  if (m_sOldPosition != m_position) {
-    // Only act if there is an actual change of position
-    // Store current Encoder position for next call of this function
-    m_sOldPosition = m_position;
-
+  if (isNewPosition()) {
     calculatePixelAndSolenoid();
     indState();
   }
@@ -344,32 +361,17 @@ auto Knitter::getStartOffset(const Direction_t direction) -> uint8_t {
 }
 
 void Knitter::reqLine(const uint8_t lineNumber) {
-  constexpr uint8_t REQLINE_LEN = 2U;
-  uint8_t payload[REQLINE_LEN] = {
-      reqLine_msgid,
-      lineNumber,
-  };
-  send(static_cast<uint8_t *>(payload), REQLINE_LEN);
-
+  m_serial_encoding.requestLine(lineNumber);
   m_lineRequested = true;
 }
 
 void Knitter::indState(const bool initState) {
-  constexpr uint8_t INDSTATE_LEN = 9U;
-  uint16_t leftHallValue = Encoders::getHallValue(Left);
-  uint16_t rightHallValue = Encoders::getHallValue(Right);
-  uint8_t payload[INDSTATE_LEN] = {
-      indState_msgid,
-      static_cast<uint8_t>(initState),
-      highByte(leftHallValue),
-      lowByte(leftHallValue),
-      highByte(rightHallValue),
-      lowByte(rightHallValue),
-      static_cast<uint8_t>(m_carriage),
-      static_cast<uint8_t>(m_position),
-      static_cast<uint8_t>(m_encoders.getDirection()),
-  };
-  send(static_cast<uint8_t *>(payload), INDSTATE_LEN);
+  m_serial_encoding.indicateState(
+      static_cast<uint8_t>(initState), Encoders::getHallValue(Left),
+      Encoders::getHallValue(Right),
+      static_cast<uint8_t>(m_encoders.getCarriage()),
+      static_cast<uint8_t>(m_encoders.getPosition()),
+      static_cast<uint8_t>(m_encoders.getDirection()));
 }
 
 void Knitter::onPacketReceived(const uint8_t *buffer, size_t size) {

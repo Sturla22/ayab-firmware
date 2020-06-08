@@ -213,3 +213,30 @@ void SerialEncoding::send(uint8_t *payload, size_t length) {
 #endif
   m_packetSerial.send(payload, length);
 }
+
+void SerialEncoding::requestLine(const uint8_t lineNumber) {
+  constexpr uint8_t REQLINE_LEN = 2U;
+  uint8_t payload[REQLINE_LEN] = {
+      reqLine_msgid,
+      lineNumber,
+  };
+  send(static_cast<uint8_t *>(payload), REQLINE_LEN);
+}
+
+void SerialEncoding::indicateState(uint8_t initState, uint16_t leftHallValue,
+                                   uint16_t rightHallValue, uint8_t carriage,
+                                   uint8_t position, uint8_t direction) {
+  constexpr uint8_t INDSTATE_LEN = 9U;
+  uint8_t payload[INDSTATE_LEN] = {
+      indState_msgid,
+      initState,
+      highByte(leftHallValue),
+      lowByte(leftHallValue),
+      highByte(rightHallValue),
+      lowByte(rightHallValue),
+      carriage,
+      position,
+      direction,
+  };
+  send(static_cast<uint8_t *>(payload), INDSTATE_LEN);
+}

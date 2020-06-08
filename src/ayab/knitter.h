@@ -82,8 +82,6 @@ private:
   OpState_t m_opState = s_init;
 
   bool m_lastLineFlag = false;
-  // TODO(sl): Not used? Can be removed?
-  uint8_t m_lastLinesCountdown = 0U;
 
   // Job Parameters
   uint8_t m_startNeedle = 0U;
@@ -105,16 +103,22 @@ private:
   bool m_workedOnLine = false;
 #ifdef DBG_NOMACHINE
   bool m_prevState = false;
+  void debug_operate();
 #endif
 
   // Resulting needle data
   uint8_t m_solenoidToSet = 0U;
   uint8_t m_pixelToSet = 0U;
 
+  bool isNewPosition();
+  bool init_guard();
   void state_init();
   static void state_ready();
+  bool operate_guard();
   void state_operate();
   void state_test();
+  void finishedWork();
+  uint8_t first_operate(uint8_t currentLineNumber);
 
   auto calculatePixelAndSolenoid() -> bool;
   auto getStartOffset(Direction_t direction) -> uint8_t;
