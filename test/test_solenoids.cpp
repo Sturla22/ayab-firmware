@@ -14,29 +14,32 @@ protected:
 #ifdef HARD_I2C
     wireMock = WireMockInstance();
 #endif
-    s = Solenoids();
+    s = new Solenoids();
   }
 
   void TearDown() override {
     releaseArduinoMock();
+#ifdef HARD_I2C
+    releaseWireMock();
+#endif
   }
 
   ArduinoMock *arduinoMock;
 #ifdef HARD_I2C
   WireMock *wireMock;
 #endif
-  Solenoids s;
+  Solenoids *s;
 };
 
 TEST_F(SolenoidsTest, test_construct) {
 }
 
 TEST_F(SolenoidsTest, test_setSolenoid) {
-  s.setSolenoid(1, true);
-  s.setSolenoid(1, false);
-  s.setSolenoid(16, false);
+  s->setSolenoid(1, true);
+  s->setSolenoid(1, false);
+  s->setSolenoid(16, false);
 }
 
 TEST_F(SolenoidsTest, test_setSolenoids) {
-  s.setSolenoids(0xFFFF);
+  s->setSolenoids(0xFFFF);
 }
