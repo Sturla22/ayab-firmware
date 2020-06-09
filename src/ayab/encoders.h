@@ -72,6 +72,7 @@ public:
   Encoders();
 
   void encA_interrupt();
+  static void callback();
 
   auto getPosition() const -> uint8_t;
   auto getBeltshift() -> Beltshift_t;

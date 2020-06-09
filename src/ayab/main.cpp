@@ -28,15 +28,35 @@
 #endif
 
 #include "knitter.h"
+#include "singleton.h"
 
-/* Global Declarations */
-Knitter *knitter; ///< A pointer to the global instance of the knitter object.
+using KnitterSingleton =
+    Singleton<Knitter>; ///< A singleton wrapper for knitter.
+
+#ifndef AYAB_TESTS
+/*!
+ * Serial encoding callback, called when packet is received from serial.
+ *
+ * Callback of SerialEncoding is implemented by Knitter.
+ */
+void SerialEncoding::callback(const uint8_t *buffer, size_t size) {
+  KnitterSingleton::getInstance().onPacketReceived(buffer, size);
+}
+
+/*!
+ * Encoders callback, called when encoder A changes.
+ *
+ * The interrupt service routine is implemented by Knitter.
+ */
+void Encoders::callback() {
+  KnitterSingleton::getInstance().isr();
+}
+#endif
 
 /*!
  * Setup - steps to take before going to the main loop.
  */
 void setup() {
-  knitter = new Knitter();
 #ifdef AYAB_HW_TEST
   hw_test_setup();
 #endif
@@ -50,6 +70,6 @@ void loop() {
 #ifdef AYAB_HW_TEST
   hw_test_loop();
 #else
-  knitter->fsm();
+  KnitterSingleton::getInstance().fsm();
 #endif
 }

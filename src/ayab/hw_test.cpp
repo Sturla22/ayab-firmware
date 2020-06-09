@@ -24,8 +24,10 @@
 #include <SerialCommand.h>
 
 #include "knitter.h"
+#include "singleton.h"
 
-extern Knitter *knitter;
+using KnitterSingleton =
+    Singleton<Knitter>; ///< A singleton wrapper for knitter.
 
 static SerialCommand SCmd; ///< The SerialCommand object
 Beeper *beeper;
@@ -57,7 +59,7 @@ static void send() {
   Serial.println("Called send");
 
   uint8_t p[] = {1, 2, 3};
-  knitter->send(p, 3);
+  KnitterSingleton::getInstance().send(p, 3);
   Serial.print("\n");
 
   prompt();

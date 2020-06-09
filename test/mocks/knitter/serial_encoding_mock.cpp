@@ -29,9 +29,10 @@ void SerialEncoding::send(uint8_t *payload, size_t length) {
   gSerialEncodingMock->send(payload, length);
 }
 
-void SerialEncoding::onPacketReceived(const uint8_t *buffer, size_t size) {
+void SerialEncoding::onPacketReceived(Knitter *knitter, const uint8_t *buffer,
+                                      size_t size) {
   assert(gSerialEncodingMock != nullptr);
-  gSerialEncodingMock->onPacketReceived(buffer, size);
+  gSerialEncodingMock->onPacketReceived(knitter, buffer, size);
 }
 
 void SerialEncoding::requestLine(const uint8_t lineNumber) {
