@@ -26,20 +26,6 @@
 #include "knitter.h"
 #include "serial_encoding.h"
 
-#ifndef AYAB_TESTS
-/*!
- * \brief Wrapper for knitter's onPacketReceived.
- *
- * This is needed since a non-static method cannot be
- * passed to _setPacketHandler_, and the only global variable
- * is knitter.
- */
-void gOnPacketReceived(const uint8_t *buffer, size_t size) {
-  extern Knitter *knitter;
-  knitter->onPacketReceived(buffer, size);
-}
-#endif
-
 /* Serial Command handling */
 
 /*!
@@ -47,7 +33,8 @@ void gOnPacketReceived(const uint8_t *buffer, size_t size) {
  *
  * \todo sl: Assert size? Handle error?
  */
-void SerialEncoding::h_reqStart(const uint8_t *buffer, size_t size) {
+void SerialEncoding::h_reqStart(Knitter *knitter, const uint8_t *buffer,
+                                size_t size) {
   if (size < 4U) {
     // Need 4 bytes from buffer below.
     return;
@@ -64,7 +51,6 @@ void SerialEncoding::h_reqStart(const uint8_t *buffer, size_t size) {
     lineBuffer[i] = 0xFFU;
   }
 
-  extern Knitter *knitter;
   bool success = knitter->startOperation(
       startNeedle, stopNeedle, continuousReportingEnabled, lineBuffer);
 
@@ -111,7 +97,8 @@ static uint8_t CRC8(const uint8_t *buffer, size_t len) {
  * \todo sl: Handle CRC-8 error?
  * \todo sl: Assert size? Handle error?
  */
-void SerialEncoding::h_cnfLine(const uint8_t *buffer, size_t size) {
+void SerialEncoding::h_cnfLine(Knitter *knitter, const uint8_t *buffer,
+                               size_t size) {
   if (size < 29U) {
     // Need 29 bytes from buffer below.
     return;
@@ -133,7 +120,6 @@ void SerialEncoding::h_cnfLine(const uint8_t *buffer, size_t size) {
   }
 #endif
 
-  extern Knitter *knitter;
   if (knitter->setNextLine(lineNumber)) {
     // Line was accepted
     bool flagLastLine = bitRead(flags, 0U);
@@ -152,8 +138,7 @@ void SerialEncoding::h_reqInfo() {
   send(payload, 4);
 }
 
-void SerialEncoding::h_reqTest() {
-  extern Knitter *knitter;
+void SerialEncoding::h_reqTest(Knitter *knitter) {
   bool success = knitter->startTest();
 
   uint8_t payload[2];
@@ -168,14 +153,15 @@ static void h_unrecognized() {
 /*! Callback for PacketSerial
  *
  */
-void SerialEncoding::onPacketReceived(const uint8_t *buffer, size_t size) {
+void SerialEncoding::onPacketReceived(Knitter *knitter, const uint8_t *buffer,
+                                      size_t size) {
   switch (buffer[0]) {
   case reqStart_msgid:
-    h_reqStart(buffer, size);
+    h_reqStart(knitter, buffer, size);
     break;
 
   case cnfLine_msgid:
-    h_cnfLine(buffer, size);
+    h_cnfLine(knitter, buffer, size);
     break;
 
   case reqInfo_msgid:
@@ -183,7 +169,7 @@ void SerialEncoding::onPacketReceived(const uint8_t *buffer, size_t size) {
     break;
 
   case reqTest_msgid:
-    h_reqTest();
+    h_reqTest(knitter);
     break;
 
   default:
@@ -195,7 +181,7 @@ void SerialEncoding::onPacketReceived(const uint8_t *buffer, size_t size) {
 SerialEncoding::SerialEncoding() {
   m_packetSerial.begin(SERIAL_BAUDRATE);
 #ifndef AYAB_TESTS
-  m_packetSerial.setPacketHandler(gOnPacketReceived);
+  m_packetSerial.setPacketHandler(callback);
 #endif
 }
 

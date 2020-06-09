@@ -375,5 +375,5 @@ void Knitter::indState(const bool initState) {
 }
 
 void Knitter::onPacketReceived(const uint8_t *buffer, size_t size) {
-  m_serial_encoding.onPacketReceived(buffer, size);
+  m_serial_encoding.onPacketReceived(this, buffer, size);
 }

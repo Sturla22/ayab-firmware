@@ -21,26 +21,27 @@ protected:
   }
 
   KnitterMock *knitterMock;
+  Knitter *knitter = nullptr;
   SerialMock *serialMock;
   SerialEncoding *s;
 };
 
 TEST_F(SerialEncodingTest, test_testmsg) {
   uint8_t buffer[] = {reqTest_msgid};
-  s->onPacketReceived(buffer, sizeof(buffer));
+  s->onPacketReceived(knitter, buffer, sizeof(buffer));
 }
 
 TEST_F(SerialEncodingTest, test_startmsg) {
   uint8_t buffer[] = {reqStart_msgid, 0, 0, 0};
-  s->onPacketReceived(buffer, sizeof(buffer));
+  s->onPacketReceived(knitter, buffer, sizeof(buffer));
 
   // Not enough bytes
-  s->onPacketReceived(buffer, sizeof(buffer) - 1);
+  s->onPacketReceived(knitter, buffer, sizeof(buffer) - 1);
 }
 
 TEST_F(SerialEncodingTest, test_infomsg) {
   uint8_t buffer[] = {reqInfo_msgid};
-  s->onPacketReceived(buffer, sizeof(buffer));
+  s->onPacketReceived(knitter, buffer, sizeof(buffer));
 }
 
 TEST_F(SerialEncodingTest, test_cnfmsg) {
@@ -56,32 +57,32 @@ TEST_F(SerialEncodingTest, test_cnfmsg) {
 
   // Line not accepted
   EXPECT_CALL(*knitterMock, setNextLine);
-  s->onPacketReceived(buffer, sizeof(buffer));
+  s->onPacketReceived(knitter, buffer, sizeof(buffer));
 
   // Line accepted, last line
   EXPECT_CALL(*knitterMock, setLastLine);
   EXPECT_CALL(*knitterMock, setNextLine).WillOnce(Return(true));
-  s->onPacketReceived(buffer, sizeof(buffer));
+  s->onPacketReceived(knitter, buffer, sizeof(buffer));
 
   // Not last line
   buffer[27] = 0x00;
   buffer[28] = 0xB7;
   EXPECT_CALL(*knitterMock, setNextLine).WillOnce(Return(true));
-  s->onPacketReceived(buffer, sizeof(buffer));
+  s->onPacketReceived(knitter, buffer, sizeof(buffer));
 
   // crc wrong
   EXPECT_CALL(*knitterMock, setNextLine).Times(0);
   buffer[28]--;
-  s->onPacketReceived(buffer, sizeof(buffer));
+  s->onPacketReceived(knitter, buffer, sizeof(buffer));
 
   // Not enough bytes in buffer
   EXPECT_CALL(*knitterMock, setNextLine).Times(0);
-  s->onPacketReceived(buffer, sizeof(buffer) - 1);
+  s->onPacketReceived(knitter, buffer, sizeof(buffer) - 1);
 }
 
 TEST_F(SerialEncodingTest, test_debug) {
   uint8_t buffer[] = {debug_msgid};
-  s->onPacketReceived(buffer, sizeof(buffer));
+  s->onPacketReceived(knitter, buffer, sizeof(buffer));
 }
 
 TEST_F(SerialEncodingTest, test_constructor) {
