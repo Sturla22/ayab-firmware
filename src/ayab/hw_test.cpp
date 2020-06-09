@@ -28,8 +28,8 @@
 extern Knitter *knitter;
 
 static SerialCommand SCmd; ///< The SerialCommand object
-static Beeper beeper;
-static Solenoids solenoids;
+Beeper *beeper;
+Solenoids *solenoids;
 
 static bool autoReadOn = false;
 static bool autoTestOn = false;
@@ -64,7 +64,7 @@ static void send() {
 }
 
 static void beep() {
-  beeper.ready();
+  beeper->ready();
 }
 
 /*!
@@ -102,10 +102,10 @@ static void setSingle() {
     return;
   }
 
+  arg = SCmd.next();
   if (arg == nullptr) {
     return;
   }
-  arg = SCmd.next();
   uint8_t solenoidState = atoi(arg);
   if (solenoidState > 1) {
     Serial.print("Invalid argument: ");
@@ -113,7 +113,7 @@ static void setSingle() {
     return;
   }
 
-  solenoids.setSolenoid(solenoidNumber, solenoidState);
+  solenoids->setSolenoid(solenoidNumber, solenoidState);
 
   prompt();
 }
@@ -137,7 +137,7 @@ static void setAll() {
   uint8_t lowByte = atoi(arg);
 
   uint16_t solenoidState = (highByte << 8) + lowByte;
-  solenoids.setSolenoids(solenoidState);
+  solenoids->setSolenoids(solenoidState);
 
   prompt();
 }
@@ -212,14 +212,14 @@ static void autoTest() {
   Serial.println("Set even solenoids");
   digitalWrite(LED_PIN_A, 1);
   digitalWrite(LED_PIN_B, 1);
-  solenoids.setSolenoids(0xAAAA);
+  solenoids->setSolenoids(0xAAAA);
 
   delay(500);
 
   Serial.println("Set odd solenoids");
   digitalWrite(LED_PIN_A, 0);
   digitalWrite(LED_PIN_B, 0);
-  solenoids.setSolenoids(0x5555);
+  solenoids->setSolenoids(0x5555);
 
   prompt();
   delay(500);
@@ -277,7 +277,14 @@ void hw_test_setup() {
   SCmd.setDefaultHandler(
       unrecognized); // Handler for command that isn't matched
 
+#ifdef AYAB_TESTS
+  SCmd.addCommand("isr", encoderAChange);
+#else
   attachInterrupt(0, encoderAChange, RISING); // Attaching ENC_PIN_A(=2)
+#endif
+
+  beeper = new Beeper();
+  solenoids = new Solenoids();
 
   Serial.print("AYAB HW Test Firmware v");
   Serial.print(FW_VERSION_MAJ);

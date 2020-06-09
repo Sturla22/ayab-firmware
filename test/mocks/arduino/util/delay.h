@@ -1,3 +1,6 @@
 #pragma once
 
-#define _delay_us(x) (void)(x)
+#define _delay_us(x)                                                           \
+  do {                                                                         \
+    (void)(x);                                                                 \
+  } while (0)

@@ -90,10 +90,10 @@ void Solenoids::setSolenoids(uint16_t state) {
  * one bit per solenoid.
  */
 void Solenoids::write(uint16_t newState) {
-#ifdef HARD_I2C
+#if defined(HARD_I2C)
   mcp_0.writeGPIO(lowByte(newState));
   mcp_1.writeGPIO(highByte(newState));
-#elif defined SOFT_I2C
+#elif defined(SOFT_I2C)
   SoftI2C.beginTransmission(I2Caddr_sol1_8 | SOLENOIDS_I2C_ADDRESS_MASK);
   SoftI2C.send(lowByte(newState));
   SoftI2C.endTransmission();
