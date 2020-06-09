@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "Knitter/knitter_mock.h"
+#include "knitter_mock.h"
 #include "serial_encoding.h"
 
 using ::testing::_;

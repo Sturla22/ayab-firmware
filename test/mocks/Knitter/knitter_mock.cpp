@@ -18,6 +18,12 @@ void releaseKnitterMock() {
 
 Knitter::Knitter() {
 }
+Beeper::Beeper() {
+}
+Solenoids::Solenoids() {
+}
+Encoders::Encoders() {
+}
 
 bool Knitter::startTest(void) {
   assert(gKnitterMock != NULL);

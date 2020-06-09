@@ -28,55 +28,26 @@ find_package(Threads REQUIRED)
 
 add_subdirectory(arduino_mock)
 
-set(SOURCE_DIRECTORY
-    ${PROJECT_SOURCE_DIR}/../src/ayab
-    )
-set(LIBRARY_DIRECTORY
-    ${PROJECT_SOURCE_DIR}/../libraries
-    )
+# TODO(sl): Use gtest_discover_tests() ?
+# https://cmake.org/cmake/help/git-master/module/GoogleTest.html
+enable_testing()
+
+set(SOURCE_DIRECTORY ${PROJECT_SOURCE_DIR}/../src/ayab)
+set(LIBRARY_DIRECTORY ${PROJECT_SOURCE_DIR}/../libraries)
+set(MOCKS_DIRECTORY ${PROJECT_SOURCE_DIR}/mocks)
+set(STUBS_DIRECTORY ${PROJECT_SOURCE_DIR}/stubs)
 
 set(SYSTEM_INCLUDES
     ${ARDUINO_MOCK_INCLUDE_DIRS}
     ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest/googletest/include
     ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest/googlemock/include
-    ${LIBRARY_DIRECTORY}/PacketSerial/src
-    ${LIBRARY_DIRECTORY}/Adafruit_MCP23008
-    ${LIBRARY_DIRECTORY}/SerialCommand
 )
-# Includes arduino-mock files directly inplace of original Arduino headers.
-set(COMMON_INCLUDES
-    ${PROJECT_SOURCE_DIR}/mocks
-    ${PROJECT_SOURCE_DIR}/mocks/Arduino
-    ${PROJECT_SOURCE_DIR}/mocks/SoftI2CMaster
-    ${SOURCE_DIRECTORY}
-    )
-set(COMMON_SOURCES
-    ${PROJECT_SOURCE_DIR}/test_all.cpp
 
-    ${SOURCE_DIRECTORY}/encoders.cpp
-    ${PROJECT_SOURCE_DIR}/test_encoders.cpp
-
-    ${SOURCE_DIRECTORY}/beeper.cpp
-    ${PROJECT_SOURCE_DIR}/test_beeper.cpp
-
-    ${SOURCE_DIRECTORY}/solenoids.cpp
-    ${PROJECT_SOURCE_DIR}/test_solenoids.cpp
-
-    ${SOURCE_DIRECTORY}/serial_encoding.cpp
-    ${PROJECT_SOURCE_DIR}/test_serial_encoding.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/Knitter/knitter_mock.cpp
-
-    ${SOURCE_DIRECTORY}/hw_test.cpp
-    ${PROJECT_SOURCE_DIR}/test_hw_test.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/SerialCommand/serial_command_mock.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/SoftI2CMaster/soft_i2c_mock.cpp
-    )
 set(COMMON_DEFINES
     ARDUINO=105
-    AYAB_QUIET
     AYAB_TESTS
-    AYAB_ENABLE_CRC
     )
+
 set(COMMON_FLAGS
     -Wall -Wextra -Wpedantic
     -Wno-vla
@@ -84,6 +55,7 @@ set(COMMON_FLAGS
     -fprofile-arcs -ftest-coverage
     -g -Og
     )
+
 set(COMMON_LINKER_FLAGS
     ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest-build/googlemock/gtest/libgtest.a
     # For some reason the order of libarduinomock and libgmock matter, keep them this way.
@@ -92,174 +64,91 @@ set(COMMON_LINKER_FLAGS
     ${CMAKE_THREAD_LIBS_INIT}
     -lgcov
     )
-set(HARD_I2C_LIB
-    ${LIBRARY_DIRECTORY}/Adafruit_MCP23008/Adafruit_MCP23008.cpp
+
+function(add_component component)
+    cmake_parse_arguments(
+        ADD_COMPONENT
+        ""
+        ""
+        "DEFINES;SOURCES;INCLUDES;SYSTEM_INCLUDES"
+        ${ARGN}
     )
-set(SOFT_I2C_LIB
-    ${LIBRARY_DIRECTORY}/SoftI2CMaster/SoftI2CMaster.cpp
-    )
-
-
-
-# TODO(sl): Use gtest_discover_tests() ?
-# https://cmake.org/cmake/help/git-master/module/GoogleTest.html
-enable_testing()
-
-function(add_machine machine board)
-  if(${board} STREQUAL "Uno")
-        set(processor
-            __AVR_ATmega168__
-            )
-        set(I2C_LIB
-            ${HARD_I2C_LIB}
-            )
-    else()
-        set(processor
-            __AVR_ATmega2560__
-            )
-        set(I2C_LIB
-            )
-    endif()
-    add_executable(${PROJECT_NAME}_${machine}_${board}
-        ${COMMON_SOURCES}
-        # External libraries
-        ${I2C_LIB}
+    set(EXE_NAME ${PROJECT_NAME}_${component}${ADD_COMPONENT_DEFINES})
+    add_executable(${PROJECT_NAME}_${EXE_NAME}
+        ${PROJECT_SOURCE_DIR}/test_all.cpp
+        ${PROJECT_SOURCE_DIR}/test_${component}.cpp
+        ${SOURCE_DIRECTORY}/${component}.cpp
+        ${ADD_COMPONENT_SOURCES}
         )
-    target_include_directories(${PROJECT_NAME}_${machine}_${board}
+    target_include_directories(${PROJECT_NAME}_${EXE_NAME}
         SYSTEM PRIVATE
         ${SYSTEM_INCLUDES}
+        ${ADD_COMPONENT_SYSTEM_INCLUDES}
         )
-    target_include_directories(${PROJECT_NAME}_${machine}_${board}
+    target_include_directories(${PROJECT_NAME}_${EXE_NAME}
         PRIVATE
-        ${COMMON_INCLUDES}
+        ${MOCKS_DIRECTORY}/Arduino
+        ${SOURCE_DIRECTORY}
+        ${ADD_COMPONENT_INCLUDES}
         )
-    target_compile_definitions(${PROJECT_NAME}_${machine}_${board}
+    target_compile_definitions(${PROJECT_NAME}_${EXE_NAME}
         PRIVATE
         ${COMMON_DEFINES}
-        AYAB_HW_TEST
-        ${machine}
-        ${processor}
+        ${ADD_COMPONENT_DEFINES}
         )
-    target_compile_options(${PROJECT_NAME}_${machine}_${board} PRIVATE
+    target_compile_options(${PROJECT_NAME}_${EXE_NAME} PRIVATE
         ${COMMON_FLAGS}
         )
-    target_link_libraries(${PROJECT_NAME}_${machine}_${board}
+    target_link_libraries(${PROJECT_NAME}_${EXE_NAME}
         ${COMMON_LINKER_FLAGS}
         )
-    add_dependencies(${PROJECT_NAME}_${machine}_${board} arduino_mock)
-    add_test(test_${machine}_${board} ${PROJECT_NAME}_${machine}_${board})
+    add_dependencies(${PROJECT_NAME}_${EXE_NAME} arduino_mock)
+    add_test(test_${EXE_NAME} ${PROJECT_NAME}_${EXE_NAME})
 endfunction()
 
-add_machine(KH930 Uno)
-add_machine(KH910 Uno)
-add_machine(KH930 Mega)
-add_machine(KH910 Mega)
-
-# Knitter (device independent)
-add_executable(${PROJECT_NAME}_knitter
-    ${PROJECT_SOURCE_DIR}/test_all.cpp
-    ${SOURCE_DIRECTORY}/knitter.cpp
-    ${PROJECT_SOURCE_DIR}/test_knitter.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/Solenoids/solenoids_mock.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/Encoders/encoders_mock.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/Beeper/beeper_mock.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/SerialEncoding/serial_encoding_mock.cpp
-    ${SOFT_I2C_LIB}
-    )
-target_include_directories(${PROJECT_NAME}_knitter
-    SYSTEM PRIVATE
-    ${SYSTEM_INCLUDES}
-    )
-target_include_directories(${PROJECT_NAME}_knitter
-    PRIVATE
-    ${COMMON_INCLUDES}
-    )
-target_compile_definitions(${PROJECT_NAME}_knitter
-    PRIVATE
-    ${COMMON_DEFINES}
-    KH930 # should not matter which one is chosen for knitter
-    __AVR_ATmega2560__ # should not matter which one is chosen for knitter
-    )
-target_compile_options(${PROJECT_NAME}_knitter PRIVATE
-    ${COMMON_FLAGS}
-    )
-target_link_libraries(${PROJECT_NAME}_knitter
-    ${COMMON_LINKER_FLAGS}
-    )
-add_dependencies(${PROJECT_NAME}_knitter arduino_mock)
-add_test(test_knitter ${PROJECT_NAME}_knitter)
-
-# Integration tests (only mock the arduino itself)
-add_executable(${PROJECT_NAME}_integration
-    ${PROJECT_SOURCE_DIR}/test_all.cpp
-    ${PROJECT_SOURCE_DIR}/test_integration.cpp
-    ${SOURCE_DIRECTORY}/main.cpp
-    ${SOURCE_DIRECTORY}/knitter.cpp
-    ${SOURCE_DIRECTORY}/beeper.cpp
-    ${SOURCE_DIRECTORY}/solenoids.cpp
-    ${SOURCE_DIRECTORY}/encoders.cpp
-    ${SOURCE_DIRECTORY}/serial_encoding.cpp
-    ${HARD_I2C_LIB}
-    )
-target_include_directories(${PROJECT_NAME}_integration
-    SYSTEM PRIVATE
-    ${SYSTEM_INCLUDES}
-    )
-target_include_directories(${PROJECT_NAME}_integration
-    PRIVATE
-    ${SOURCE_DIRECTORY}
-    ${PROJECT_SOURCE_DIR}/mocks/Arduino
-)
-target_compile_definitions(${PROJECT_NAME}_integration
-    PRIVATE
-    ${COMMON_DEFINES}
-    KH910
-    __AVR_ATmega328P__
-)
-target_compile_options(${PROJECT_NAME}_integration PRIVATE
-    ${COMMON_FLAGS}
-)
-target_link_libraries(${PROJECT_NAME}_integration
-    ${COMMON_LINKER_FLAGS}
-)
-add_dependencies(${PROJECT_NAME}_integration arduino_mock)
-add_test(test_integration ${PROJECT_NAME}_integration)
-
-# Integration of hw tests (only mock the arduino itself)
-add_executable(${PROJECT_NAME}_hw_test_integration
-    ${PROJECT_SOURCE_DIR}/test_all.cpp
-    ${PROJECT_SOURCE_DIR}/test_hw_test_integration.cpp
-    ${SOURCE_DIRECTORY}/main.cpp
-    ${SOURCE_DIRECTORY}/hw_test.cpp
-    ${SOURCE_DIRECTORY}/knitter.cpp
-    ${SOURCE_DIRECTORY}/beeper.cpp
-    ${SOURCE_DIRECTORY}/solenoids.cpp
-    ${SOURCE_DIRECTORY}/encoders.cpp
-    ${SOURCE_DIRECTORY}/serial_encoding.cpp
-    ${HARD_I2C_LIB}
-    ${LIBRARY_DIRECTORY}/SerialCommand/SerialCommand.cpp
-    )
-target_include_directories(${PROJECT_NAME}_hw_test_integration
-    SYSTEM PRIVATE
-    ${SYSTEM_INCLUDES}
-    )
-target_include_directories(${PROJECT_NAME}_hw_test_integration
-    PRIVATE
-    ${SOURCE_DIRECTORY}
-    ${PROJECT_SOURCE_DIR}/mocks/Arduino
-)
-target_compile_definitions(${PROJECT_NAME}_hw_test_integration
-    PRIVATE
-    ${COMMON_DEFINES}
-    KH910
-    __AVR_ATmega328P__
-    AYAB_HW_TEST
-)
-target_compile_options(${PROJECT_NAME}_hw_test_integration PRIVATE
-    ${COMMON_FLAGS}
-)
-target_link_libraries(${PROJECT_NAME}_hw_test_integration
-    ${COMMON_LINKER_FLAGS}
-)
-add_dependencies(${PROJECT_NAME}_hw_test_integration arduino_mock)
-add_test(test_hw_test_integration ${PROJECT_NAME}_hw_test_integration)
+add_component(beeper)
+add_component(encoders DEFINES KH910 INCLUDES ${STUBS_DIRECTORY}/PacketSerial)
+add_component(encoders DEFINES KH930 INCLUDES ${STUBS_DIRECTORY}/PacketSerial)
+add_component(solenoids
+  DEFINES __AVR_ATmega168__
+  INCLUDES ${LIBRARY_DIRECTORY}/Adafruit_MCP23008
+  SOURCES ${LIBRARY_DIRECTORY}/Adafruit_MCP23008/Adafruit_MCP23008.cpp
+  )
+add_component(solenoids
+  DEFINES __AVR_ATmega2560__
+  INCLUDES ${MOCKS_DIRECTORY}/SoftI2CMaster
+  SOURCES ${MOCKS_DIRECTORY}/SoftI2CMaster/soft_i2c_mock.cpp
+  )
+add_component(knitter
+  INCLUDES
+    ${MOCKS_DIRECTORY}/Solenoids
+    ${MOCKS_DIRECTORY}/Beeper
+    ${MOCKS_DIRECTORY}/Encoders
+    ${MOCKS_DIRECTORY}/SerialEncoding
+    ${STUBS_DIRECTORY}/PacketSerial
+  SOURCES
+    ${MOCKS_DIRECTORY}/Solenoids/solenoids_mock.cpp
+    ${MOCKS_DIRECTORY}/Encoders/encoders_mock.cpp
+    ${MOCKS_DIRECTORY}/Beeper/beeper_mock.cpp
+    ${MOCKS_DIRECTORY}/SerialEncoding/serial_encoding_mock.cpp
+  )
+if(false)
+add_component(hw_test
+  DEFINES AYAB_HW_TEST
+  INCLUDES
+    ${MOCKS_DIRECTORY}/SoftI2CMaster
+    ${MOCKS_DIRECTORY}/SerialCommand
+    ${MOCKS_DIRECTORY}/Knitter
+    ${LIBRARY_DIRECTORY}/SerialCommand
+    ${STUBS_DIRECTORY}/PacketSerial
+  SOURCES
+    ${MOCKS_DIRECTORY}/Knitter/knitter_mock.cpp
+    ${MOCKS_DIRECTORY}/SoftI2CMaster/soft_i2c_mock.cpp
+    ${MOCKS_DIRECTORY}/SerialCommand/serial_command_mock.cpp
+  )
+add_component(serial_encoding
+  INCLUDES ${MOCKS_DIRECTORY}/Knitter
+  SOURCES ${MOCKS_DIRECTORY}/Knitter/knitter_mock.cpp
+  SYSTEM_INCLUDES ${LIBRARY_DIRECTORY}/PacketSerial/src
+  )
+endif()

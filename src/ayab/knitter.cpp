@@ -23,8 +23,9 @@
 
 #include <Arduino.h>
 
-#include "board.h"
 #include "knitter.h"
+
+#include "board.h"
 
 #ifdef CLANG_TIDY
 // clang-tidy doesn't find these macros for some reason,
@@ -32,6 +33,13 @@
 constexpr uint8_t UINT8_MAX = 0xFFU;
 constexpr uint16_t UINT16_MAX = 0xFFFFU;
 #endif
+
+constexpr uint8_t startOffsetLUT[NUM_DIRECTIONS][NUM_CARRIAGES] = {
+    // NC,  K,  L,  G
+    {0, 0, 0, 0},    // NoDirection
+    {0, 40, 40, 8},  // Left
+    {0, 16, 16, 32}, // Right
+};
 
 /*!
  * \brief Knitter constructor.

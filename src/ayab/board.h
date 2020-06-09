@@ -57,6 +57,8 @@ constexpr uint16_t START_OPERATION_DELAY = 2000U;
 // Arduino Mega
 #define SOFT_I2C
 
+#elif defined(AYAB_TESTS)
+// No error when running tests
 #else
 #error "untested board - please check your I2C ports"
 #endif
