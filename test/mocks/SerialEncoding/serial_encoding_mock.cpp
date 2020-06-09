@@ -24,7 +24,7 @@ void SerialEncoding::update() {
   gSerialEncodingMock->update();
 }
 
-void SerialEncoding::send(uint8_t *payload, size_t length) {
+void SerialEncoding::send(const uint8_t *payload, size_t length) {
   assert(gSerialEncodingMock != nullptr);
   gSerialEncodingMock->send(payload, length);
 }

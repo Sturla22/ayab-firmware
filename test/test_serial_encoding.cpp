@@ -1,7 +1,8 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-#include "Knitter/knitter_mock.h"
-#include "serial_encoding.h"
+#include <encoders.h>
+#include <knitter_mock.h>
+#include <serial_encoding.h>
 
 using ::testing::_;
 using ::testing::Return;
@@ -104,11 +105,12 @@ TEST_F(SerialEncodingTest, test_send) {
 TEST_F(SerialEncodingTest, test_requestline) {
   EXPECT_CALL(*serialMock, write(_, _));
   EXPECT_CALL(*serialMock, write(SLIP::END));
-  s->requestLine(0);
+  s->requestLine(1);
 }
 
 TEST_F(SerialEncodingTest, test_indicateState) {
   EXPECT_CALL(*serialMock, write(_, _));
   EXPECT_CALL(*serialMock, write(SLIP::END));
-  s->indicateState(0, 0, 0, 0, 0, 0);
+  s->indicateState(0, 100, 400, static_cast<uint8_t>(K), 1,
+                   static_cast<uint8_t>(Right));
 }

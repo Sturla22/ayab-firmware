@@ -1,11 +1,13 @@
-#include <Arduino.h>
-#include <Knitter/knitter_mock.h>
-#include <SerialCommand/serial_command_mock.h>
-#include <SoftI2CMaster/SoftI2CMaster.h>
-#include <Wire.h>
-#include <board.h>
 #include <gtest/gtest.h>
+
+#include <Arduino.h>
+#include <SoftI2CMaster.h>
+#include <Wire.h>
+#include <beeper_mock.h>
+#include <board.h>
 #include <hw_test.h>
+#include <serial_command_mock.h>
+#include <solenoids_mock.h>
 
 using ::testing::Return;
 
@@ -16,8 +18,9 @@ protected:
     serialCommandMock = serialCommandMockInstance();
     serialMock = serialMockInstance();
     wireMock = WireMockInstance();
-    knitterMock = knitterMockInstance();
     softI2CMock = softI2CMockInstance();
+    beeperMock = beeperMockInstance();
+    solenoidsMock = solenoidsMockInstance();
     hw_test_setup();
   }
 
@@ -26,16 +29,18 @@ protected:
     releaseSerialCommandMock();
     releaseSerialMock();
     releaseWireMock();
-    releaseKnitterMock();
     releaseSoftI2CMock();
+    releaseBeeperMock();
+    releaseSolenoidsMock();
   }
 
   ArduinoMock *arduinoMock;
   SerialCommandMock *serialCommandMock;
   SerialMock *serialMock;
   WireMock *wireMock;
-  KnitterMock *knitterMock;
   SoftI2CMock *softI2CMock;
+  BeeperMock *beeperMock;
+  SolenoidsMock *solenoidsMock;
 };
 
 TEST_F(HwTestTest, test_help) {
@@ -44,10 +49,6 @@ TEST_F(HwTestTest, test_help) {
 
 TEST_F(HwTestTest, test_stop) {
   serialCommandMock->callCommand("stop");
-}
-
-TEST_F(HwTestTest, test_send) {
-  serialCommandMock->callCommand("send");
 }
 
 TEST_F(HwTestTest, test_beep) {

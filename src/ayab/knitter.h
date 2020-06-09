@@ -34,13 +34,6 @@ constexpr uint8_t NUM_NEEDLES = 200U;
 constexpr uint8_t END_OF_LINE_OFFSET_L = 12U;
 constexpr uint8_t END_OF_LINE_OFFSET_R = 12U;
 
-constexpr uint8_t startOffsetLUT[NUM_DIRECTIONS][NUM_CARRIAGES] = {
-    // NC,  K,  L,  G
-    {0, 0, 0, 0},    // NoDirection
-    {0, 40, 40, 8},  // Left
-    {0, 16, 16, 32}, // Right
-};
-
 enum OpState { s_init, s_ready, s_operate, s_test };
 
 using OpState_t = enum OpState;

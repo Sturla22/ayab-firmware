@@ -3,8 +3,9 @@
 #include "solenoids.h"
 #ifdef HARD_I2C
 #include <Wire.h>
+#else
+#include <SoftI2CMaster.h>
 #endif
-#include <SoftI2CMaster/SoftI2CMaster.h>
 
 using ::testing::Return;
 
@@ -14,8 +15,9 @@ protected:
     arduinoMock = arduinoMockInstance();
 #ifdef HARD_I2C
     wireMock = WireMockInstance();
-#endif
+#else
     softI2CMock = softI2CMockInstance();
+#endif
     s = new Solenoids();
   }
 
@@ -23,15 +25,17 @@ protected:
     releaseArduinoMock();
 #ifdef HARD_I2C
     releaseWireMock();
-#endif
+#else
     releaseSoftI2CMock();
+#endif
   }
 
   ArduinoMock *arduinoMock;
 #ifdef HARD_I2C
   WireMock *wireMock;
-#endif
+#else
   SoftI2CMock *softI2CMock;
+#endif
   Solenoids *s;
 };
 

@@ -23,11 +23,9 @@
 
 #include <SerialCommand.h>
 
-#include "knitter.h"
-#include "singleton.h"
-
-using KnitterSingleton =
-    Singleton<Knitter>; ///< A singleton wrapper for knitter.
+#include "beeper.h"
+#include "serial_encoding.h"
+#include "solenoids.h"
 
 static SerialCommand SCmd; ///< The SerialCommand object
 Beeper *beeper;
@@ -49,18 +47,7 @@ static void help() {
   Serial.println("beep");
   Serial.println("autoRead");
   Serial.println("autoTest");
-  Serial.println("send");
   Serial.println("help");
-
-  prompt();
-}
-
-static void send() {
-  Serial.println("Called send");
-
-  uint8_t p[] = {1, 2, 3};
-  KnitterSingleton::getInstance().send(p, 3);
-  Serial.print("\n");
 
   prompt();
 }
@@ -273,7 +260,6 @@ void hw_test_setup() {
   SCmd.addCommand("beep", beepCmd);
   SCmd.addCommand("autoRead", autoReadCmd);
   SCmd.addCommand("autoTest", autoTestCmd);
-  SCmd.addCommand("send", send);
   SCmd.addCommand("stop", stop);
   SCmd.addCommand("help", help);
   SCmd.setDefaultHandler(
@@ -288,8 +274,7 @@ void hw_test_setup() {
   beeper = new Beeper();
   solenoids = new Solenoids();
 
-  // Initialize knitter for serial communication.
-  KnitterSingleton::getInstance();
+  Serial.begin(115200);
 
   Serial.print("AYAB HW Test Firmware v");
   Serial.print(FW_VERSION_MAJ);

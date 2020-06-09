@@ -36,6 +36,8 @@ constexpr uint16_t FILTER_L_MIN = 200U; // below: L Carriage
 constexpr uint16_t FILTER_L_MAX = 600U; // above: K Carriage
 constexpr uint16_t FILTER_R_MIN = 0U;
 constexpr uint16_t FILTER_R_MAX = 600U;
+#elif defined(AYAB_TESTS)
+// No error when running tests
 #else
 #error "KH910 or KH930 has to be defined as a preprocessor variable!"
 #endif

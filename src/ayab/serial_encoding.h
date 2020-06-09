@@ -57,7 +57,7 @@ class SerialEncoding {
 public:
   SerialEncoding();
   void update();
-  void send(uint8_t *payload, size_t length);
+  void send(const uint8_t *payload, size_t length);
   void onPacketReceived(Knitter *knitter, const uint8_t *buffer, size_t size);
   void requestLine(const uint8_t lineNumber);
   void indicateState(uint8_t initState, uint16_t leftHallValue,
