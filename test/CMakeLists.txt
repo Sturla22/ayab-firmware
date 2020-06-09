@@ -46,8 +46,8 @@ set(SYSTEM_INCLUDES
 # Includes arduino-mock files directly inplace of original Arduino headers.
 set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/mocks
-    ${PROJECT_SOURCE_DIR}/mocks/arduino
-    ${PROJECT_SOURCE_DIR}/mocks/hw_test
+    ${PROJECT_SOURCE_DIR}/mocks/Arduino
+    ${PROJECT_SOURCE_DIR}/mocks/SoftI2CMaster
     ${SOURCE_DIRECTORY}
     )
 set(COMMON_SOURCES
@@ -64,12 +64,12 @@ set(COMMON_SOURCES
 
     ${SOURCE_DIRECTORY}/serial_encoding.cpp
     ${PROJECT_SOURCE_DIR}/test_serial_encoding.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/serial_encoding/knitter_mock.cpp
+    ${PROJECT_SOURCE_DIR}/mocks/Knitter/knitter_mock.cpp
 
     ${SOURCE_DIRECTORY}/hw_test.cpp
     ${PROJECT_SOURCE_DIR}/test_hw_test.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/hw_test/serial_command_mock.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/hw_test/soft_i2c_mock.cpp
+    ${PROJECT_SOURCE_DIR}/mocks/SerialCommand/serial_command_mock.cpp
+    ${PROJECT_SOURCE_DIR}/mocks/SoftI2CMaster/soft_i2c_mock.cpp
     )
 set(COMMON_DEFINES
     ARDUINO=105
@@ -160,10 +160,10 @@ add_executable(${PROJECT_NAME}_knitter
     ${PROJECT_SOURCE_DIR}/test_all.cpp
     ${SOURCE_DIRECTORY}/knitter.cpp
     ${PROJECT_SOURCE_DIR}/test_knitter.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/knitter/solenoids_mock.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/knitter/encoders_mock.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/knitter/beeper_mock.cpp
-    ${PROJECT_SOURCE_DIR}/mocks/knitter/serial_encoding_mock.cpp
+    ${PROJECT_SOURCE_DIR}/mocks/Solenoids/solenoids_mock.cpp
+    ${PROJECT_SOURCE_DIR}/mocks/Encoders/encoders_mock.cpp
+    ${PROJECT_SOURCE_DIR}/mocks/Beeper/beeper_mock.cpp
+    ${PROJECT_SOURCE_DIR}/mocks/SerialEncoding/serial_encoding_mock.cpp
     ${SOFT_I2C_LIB}
     )
 target_include_directories(${PROJECT_NAME}_knitter
@@ -208,7 +208,7 @@ target_include_directories(${PROJECT_NAME}_integration
 target_include_directories(${PROJECT_NAME}_integration
     PRIVATE
     ${SOURCE_DIRECTORY}
-    ${PROJECT_SOURCE_DIR}/mocks/arduino
+    ${PROJECT_SOURCE_DIR}/mocks/Arduino
 )
 target_compile_definitions(${PROJECT_NAME}_integration
     PRIVATE
@@ -246,7 +246,7 @@ target_include_directories(${PROJECT_NAME}_hw_test_integration
 target_include_directories(${PROJECT_NAME}_hw_test_integration
     PRIVATE
     ${SOURCE_DIRECTORY}
-    ${PROJECT_SOURCE_DIR}/mocks/arduino
+    ${PROJECT_SOURCE_DIR}/mocks/Arduino
 )
 target_compile_definitions(${PROJECT_NAME}_hw_test_integration
     PRIVATE

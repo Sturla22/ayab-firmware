@@ -4,7 +4,7 @@
 #ifdef HARD_I2C
 #include <Wire.h>
 #endif
-#include <SoftI2CMaster.h>
+#include <SoftI2CMaster/SoftI2CMaster.h>
 
 using ::testing::Return;
 
