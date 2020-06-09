@@ -43,8 +43,9 @@ GTEST_COLOR=1 ctest $ctest_verbose --output-on-failure .
 cd ../..
 
 GCOVR_ARGS="--exclude-unreachable-branches --exclude-throw-branches \
-            --exclude-directories 'test/build/arduino_mock$' -e test_* -e libraries*"
+  -e test_* -e libraries* -j $(nproc)"
+GCOVR_SEARCH_PATH="test/build/CMakeFiles"
 
-gcovr -r . $GCOVR_ARGS  --html-details -o ./test/build/coverage.html
-gcovr -r . $GCOVR_ARGS --branches
-gcovr -d -j $(nproc) -r . $GCOVR_ARGS --fail-under-line 100 --fail-under-branch 100
+gcovr $GCOVR_ARGS --html-details -o ./test/build/coverage.html $GCOVR_SEARCH_PATH
+gcovr $GCOVR_ARGS --branches $GCOVR_SEARCH_PATH
+gcovr -d $GCOVR_ARGS --fail-under-line 100 --fail-under-branch 100 $GCOVR_SEARCH_PATH

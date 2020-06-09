@@ -1,11 +1,11 @@
 #include <Arduino.h>
+#include <Knitter/knitter_mock.h>
+#include <SerialCommand/serial_command_mock.h>
+#include <SoftI2CMaster/SoftI2CMaster.h>
 #include <Wire.h>
 #include <board.h>
 #include <gtest/gtest.h>
 #include <hw_test.h>
-#include <hw_test/SoftI2CMaster.h>
-#include <hw_test/serial_command_mock.h>
-#include <serial_encoding/knitter_mock.h>
 
 using ::testing::Return;
 

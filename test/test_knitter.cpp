@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
+#include <Beeper/beeper_mock.h>
+#include <Encoders/encoders_mock.h>
+#include <SerialEncoding/serial_encoding_mock.h>
+#include <Solenoids/solenoids_mock.h>
 #include <board.h>
 #include <knitter.h>
-#include <knitter/beeper_mock.h>
-#include <knitter/encoders_mock.h>
-#include <knitter/serial_encoding_mock.h>
-#include <knitter/solenoids_mock.h>
 
 using ::testing::_;
 using ::testing::Return;
