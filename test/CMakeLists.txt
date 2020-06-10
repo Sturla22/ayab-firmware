@@ -24,9 +24,8 @@ if(CCACHE_PROGRAM)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
 endif()
 
-find_package(Threads REQUIRED)
-
 add_subdirectory(arduino_mock)
+get_property(ARDUINO_MOCK_INCLUDE_DIRS TARGET arduino_mock PROPERTY INCLUDE_DIRECTORIES)
 
 # TODO(sl): Use gtest_discover_tests() ?
 # https://cmake.org/cmake/help/git-master/module/GoogleTest.html
@@ -39,8 +38,8 @@ set(STUBS_DIRECTORY ${PROJECT_SOURCE_DIR}/stubs)
 
 set(SYSTEM_INCLUDES
     ${ARDUINO_MOCK_INCLUDE_DIRS}
-    ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest/googletest/include
-    ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest/googlemock/include
+    ${GTEST_INCLUDE_DIRS}
+    ${GMOCK_INCLUDE_DIRS}
 )
 
 set(COMMON_DEFINES
@@ -57,10 +56,7 @@ set(COMMON_FLAGS
     )
 
 set(COMMON_LINKER_FLAGS
-    ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest-build/googlemock/gtest/libgtest.a
-    # For some reason the order of libarduinomock and libgmock matter, keep them this way.
-    ${ARDUINO_MOCK_LIBS_DIR}/dist/lib/libarduino_mock.a
-    ${ARDUINO_MOCK_LIBS_DIR}/lib/gtest/gtest/src/gtest-build/googlemock/libgmock.a
+    arduino_mock
     ${CMAKE_THREAD_LIBS_INIT}
     -lgcov
     )

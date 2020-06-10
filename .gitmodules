@@ -10,3 +10,6 @@
 [submodule "libraries/Adafruit_MCP23008"]
 	url = https://github.com/adafruit/Adafruit-MCP23008-library.git
 	path = libraries/Adafruit_MCP23008
+[submodule "test/arduino_mock"]
+	path = test/arduino_mock
+	url = https://github.com/bt-trx/arduino-mock
