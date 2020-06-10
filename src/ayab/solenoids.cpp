@@ -25,13 +25,14 @@
 #include "solenoids.h"
 
 Solenoids::Solenoids()
-#if defined(HARD_I2C)
     : mcp_0(), mcp_1()
-#elif defined(SOFT_I2C)
-    : SoftI2C(A4, A5)
+#if defined(SOFT_I2C)
+      ,
+      Wire(A4, A5)
 #endif
 {
-#ifdef HARD_I2C
+  mcp_0.setWire(&Wire);
+  mcp_1.setWire(&Wire);
   mcp_0.begin(I2Caddr_sol1_8);
   mcp_1.begin(I2Caddr_sol9_16);
 
@@ -39,8 +40,6 @@ Solenoids::Solenoids()
     mcp_0.pinMode(i, OUTPUT);
     mcp_1.pinMode(i, OUTPUT);
   }
-#endif
-  // No Action needed for SOFT_I2C
 }
 
 /*!
@@ -90,15 +89,6 @@ void Solenoids::setSolenoids(uint16_t state) {
  * one bit per solenoid.
  */
 void Solenoids::write(uint16_t newState) {
-#if defined(HARD_I2C)
   mcp_0.writeGPIO(lowByte(newState));
   mcp_1.writeGPIO(highByte(newState));
-#elif defined(SOFT_I2C)
-  SoftI2C.beginTransmission(I2Caddr_sol1_8 | SOLENOIDS_I2C_ADDRESS_MASK);
-  SoftI2C.write(lowByte(newState));
-  SoftI2C.endTransmission();
-  SoftI2C.beginTransmission(I2Caddr_sol9_16 | SOLENOIDS_I2C_ADDRESS_MASK);
-  SoftI2C.write(highByte(newState));
-  SoftI2C.endTransmission();
-#endif
 }

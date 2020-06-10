@@ -22,12 +22,12 @@
  */
 #pragma once
 
+#include <Adafruit_MCP23008.h>
 #include <Arduino.h>
 
 #include "board.h"
 
 #if defined(HARD_I2C)
-#include <Adafruit_MCP23008.h>
 #include <Wire.h>
 #elif defined(SOFT_I2C)
 #include <SoftI2CMaster.h>
@@ -50,10 +50,9 @@ private:
   uint16_t solenoidState = 0x0000U;
   void write(uint16_t state);
 
-#if defined(HARD_I2C)
   Adafruit_MCP23008 mcp_0;
   Adafruit_MCP23008 mcp_1;
-#elif defined(SOFT_I2C)
-  SoftI2CMaster SoftI2C;
+#if defined(SOFT_I2C)
+  SoftI2CMaster Wire;
 #endif
 };

@@ -75,12 +75,14 @@ function(add_component component)
         ${PROJECT_SOURCE_DIR}/test_${component}.cpp
         ${SOURCE_DIRECTORY}/${component}.cpp
         ${ADD_COMPONENT_SOURCES}
+        ${LIBRARY_DIRECTORY}/Adafruit_MCP23008/Adafruit_MCP23008.cpp
         )
     target_include_directories(${PROJECT_NAME}_${EXE_NAME}
         SYSTEM PRIVATE
         ${SYSTEM_INCLUDES}
         ${ADD_COMPONENT_SYSTEM_INCLUDES}
         ${MOCKS_DIRECTORY}/Arduino
+        ${LIBRARY_DIRECTORY}/Adafruit_MCP23008
         )
     target_include_directories(${PROJECT_NAME}_${EXE_NAME}
         PRIVATE
@@ -107,8 +109,6 @@ add_component(encoders DEFINES KH910 SYSTEM_INCLUDES ${STUBS_DIRECTORY}/PacketSe
 add_component(encoders DEFINES KH930 SYSTEM_INCLUDES ${STUBS_DIRECTORY}/PacketSerial)
 add_component(solenoids
   DEFINES __AVR_ATmega168__
-  SYSTEM_INCLUDES ${LIBRARY_DIRECTORY}/Adafruit_MCP23008
-  SOURCES ${LIBRARY_DIRECTORY}/Adafruit_MCP23008/Adafruit_MCP23008.cpp
   )
 add_component(solenoids
   DEFINES __AVR_ATmega2560__

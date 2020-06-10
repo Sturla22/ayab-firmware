@@ -38,7 +38,22 @@ uint8_t SoftI2CMaster::beginTransmission(uint8_t address) {
   return gSoftI2CMock->beginTransmission(address);
 }
 
-uint8_t SoftI2CMaster::write(uint8_t x) {
+size_t SoftI2CMaster::write(uint8_t x) {
   assert(gSoftI2CMock != NULL);
   return gSoftI2CMock->write(x);
+}
+
+size_t SoftI2CMaster::write(const uint8_t *x, uint8_t y) {
+  assert(gSoftI2CMock != NULL);
+  return gSoftI2CMock->write(x, y);
+}
+
+int SoftI2CMaster::available() {
+  assert(gSoftI2CMock != NULL);
+  return gSoftI2CMock->available();
+}
+
+int SoftI2CMaster::read() {
+  assert(gSoftI2CMock != NULL);
+  return gSoftI2CMock->read();
 }

@@ -8,8 +8,8 @@
 	path = libraries/SoftI2CMaster
 	url = https://github.com/todbot/SoftI2CMaster.git
 [submodule "libraries/Adafruit_MCP23008"]
-	url = https://github.com/adafruit/Adafruit-MCP23008-library.git
+	url = https://github.com/Sturla22/Adafruit-MCP23008-library.git
 	path = libraries/Adafruit_MCP23008
 [submodule "test/arduino_mock"]
 	path = test/arduino_mock
-	url = https://github.com/bt-trx/arduino-mock
+	url = https://github.com/Sturla22/arduino-mock.git

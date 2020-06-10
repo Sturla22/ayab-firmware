@@ -13,9 +13,8 @@ class SolenoidsTest : public ::testing::Test {
 protected:
   void SetUp() override {
     arduinoMock = arduinoMockInstance();
-#ifdef HARD_I2C
     wireMock = WireMockInstance();
-#else
+#ifdef SOFT_I2C
     softI2CMock = softI2CMockInstance();
 #endif
     s = new Solenoids();
@@ -23,17 +22,15 @@ protected:
 
   void TearDown() override {
     releaseArduinoMock();
-#ifdef HARD_I2C
     releaseWireMock();
-#else
+#ifdef SOFT_I2C
     releaseSoftI2CMock();
 #endif
   }
 
   ArduinoMock *arduinoMock;
-#ifdef HARD_I2C
   WireMock *wireMock;
-#else
+#ifdef SOFT_I2C
   SoftI2CMock *softI2CMock;
 #endif
   Solenoids *s;
