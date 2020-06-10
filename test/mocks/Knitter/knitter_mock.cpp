@@ -47,7 +47,7 @@ void Knitter::setLastLine(void) {
   gKnitterMock->setLastLine();
 }
 
-void Knitter::send(uint8_t payload[], size_t length) {
+void Knitter::send(const uint8_t payload[], size_t length) {
   assert(gKnitterMock != NULL);
   gKnitterMock->send(payload, length);
 }

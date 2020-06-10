@@ -59,11 +59,11 @@ Knitter::Knitter()
 #endif
 }
 
-auto Knitter::getState() -> OpState {
+auto Knitter::getState() const -> OpState {
   return m_opState;
 }
 
-void Knitter::send(uint8_t *payload, size_t length) {
+void Knitter::send(const uint8_t *payload, size_t length) {
   m_serial_encoding.send(payload, length);
 }
 

@@ -27,19 +27,19 @@ uint8_t Encoders::getPosition() const {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getPosition();
 }
-Beltshift Encoders::getBeltshift() {
+Beltshift Encoders::getBeltshift() const {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getBeltshift();
 }
-Direction Encoders::getDirection() {
+Direction Encoders::getDirection() const {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getDirection();
 }
-Direction Encoders::getHallActive() {
+Direction Encoders::getHallActive() const {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getHallActive();
 }
-Carriage Encoders::getCarriage() {
+Carriage Encoders::getCarriage() const {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getCarriage();
 }

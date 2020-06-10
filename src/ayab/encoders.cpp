@@ -66,28 +66,28 @@ auto Encoders::getPosition() const -> uint8_t {
 /*!
  * \brief Getter for beltshift member.
  */
-auto Encoders::getBeltshift() -> Beltshift {
+auto Encoders::getBeltshift() const -> Beltshift {
   return m_beltShift;
 }
 
 /*!
  * \brief Getter for direction member.
  */
-auto Encoders::getDirection() -> Direction {
+auto Encoders::getDirection() const -> Direction {
   return m_direction;
 }
 
 /*!
  * \brief Getter for hallActive member.
  */
-auto Encoders::getHallActive() -> Direction {
+auto Encoders::getHallActive() const -> Direction {
   return m_hallActive;
 }
 
 /*!
  * \brief Getter for carriage member.
  */
-auto Encoders::getCarriage() -> Carriage {
+auto Encoders::getCarriage() const -> Carriage {
   return m_carriage;
 }
 

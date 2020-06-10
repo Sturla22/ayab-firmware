@@ -71,10 +71,10 @@ public:
   static void callback();
 
   auto getPosition() const -> uint8_t;
-  auto getBeltshift() -> Beltshift;
-  auto getDirection() -> Direction;
-  auto getHallActive() -> Direction;
-  auto getCarriage() -> Carriage;
+  auto getBeltshift() const -> Beltshift;
+  auto getDirection() const -> Direction;
+  auto getHallActive() const -> Direction;
+  auto getCarriage() const -> Carriage;
 
   static auto getHallValue(Direction pSensor) -> uint16_t;
 

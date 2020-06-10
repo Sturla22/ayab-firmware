@@ -60,8 +60,8 @@ public:
   auto setNextLine(uint8_t lineNumber) -> bool;
   void setLastLine();
 
-  auto getState() -> OpState;
-  void send(uint8_t *payload, size_t length);
+  auto getState() const -> OpState;
+  void send(const uint8_t *payload, size_t length);
   void onPacketReceived(const uint8_t *buffer, size_t size);
 
 private:
