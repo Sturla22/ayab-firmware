@@ -13,6 +13,7 @@ protected:
     knitterMock = knitterMockInstance();
     serialMock = serialMockInstance();
     EXPECT_CALL(*serialMock, begin);
+    ON_CALL(*serialMock, BoolOp).WillByDefault(Return(true));
     s = new SerialEncoding();
   }
 

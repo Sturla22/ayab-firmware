@@ -15,6 +15,7 @@ protected:
   void SetUp() override {
     arduinoMock = arduinoMockInstance();
     serialMock = serialMockInstance();
+    ON_CALL(*serialMock, BoolOp).WillByDefault(Return(true));
 #ifdef HARD_I2C
     wireMock = WireMockInstance();
 #endif
