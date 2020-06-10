@@ -38,52 +38,7 @@ uint8_t SoftI2CMaster::beginTransmission(uint8_t address) {
   return gSoftI2CMock->beginTransmission(address);
 }
 
-uint8_t SoftI2CMaster::beginTransmission(int address) {
+uint8_t SoftI2CMaster::write(uint8_t x) {
   assert(gSoftI2CMock != NULL);
-  return gSoftI2CMock->beginTransmission(address);
-}
-
-uint8_t SoftI2CMaster::send(uint8_t x) {
-  assert(gSoftI2CMock != NULL);
-  return gSoftI2CMock->send(x);
-}
-
-void SoftI2CMaster::send(uint8_t *x, uint8_t y) {
-  assert(gSoftI2CMock != NULL);
-  gSoftI2CMock->send(x, y);
-}
-
-void SoftI2CMaster::send(int x) {
-  assert(gSoftI2CMock != NULL);
-  gSoftI2CMock->send(x);
-}
-
-void SoftI2CMaster::send(char *x) {
-  assert(gSoftI2CMock != NULL);
-  gSoftI2CMock->send(x);
-}
-
-uint8_t SoftI2CMaster::requestFrom(int address) {
-  assert(gSoftI2CMock != NULL);
-  return gSoftI2CMock->requestFrom(address);
-}
-
-uint8_t SoftI2CMaster::requestFrom(uint8_t address) {
-  assert(gSoftI2CMock != NULL);
-  return gSoftI2CMock->requestFrom(address);
-}
-
-uint8_t SoftI2CMaster::receive(uint8_t ack) {
-  assert(gSoftI2CMock != NULL);
-  return gSoftI2CMock->receive(ack);
-}
-
-uint8_t SoftI2CMaster::receive() {
-  assert(gSoftI2CMock != NULL);
-  return gSoftI2CMock->receive();
-}
-
-uint8_t SoftI2CMaster::receiveLast() {
-  assert(gSoftI2CMock != NULL);
-  return gSoftI2CMock->receiveLast();
+  return gSoftI2CMock->write(x);
 }
