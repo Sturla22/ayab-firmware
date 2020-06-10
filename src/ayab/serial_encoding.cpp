@@ -55,7 +55,7 @@ void SerialEncoding::h_reqStart(Knitter *knitter, const uint8_t *buffer,
       startNeedle, stopNeedle, continuousReportingEnabled, lineBuffer);
 
   uint8_t payload[2];
-  payload[0] = cnfStart_msgid;
+  payload[0] = static_cast<uint8_t>(AYAB_API::cnfStart_msgid);
   payload[1] = static_cast<uint8_t>(success);
   send(payload, 2);
 }
@@ -131,7 +131,7 @@ void SerialEncoding::h_cnfLine(Knitter *knitter, const uint8_t *buffer,
 
 void SerialEncoding::h_reqInfo() {
   uint8_t payload[4];
-  payload[0] = cnfInfo_msgid;
+  payload[0] = static_cast<uint8_t>(AYAB_API::cnfInfo_msgid);
   payload[1] = API_VERSION;
   payload[2] = FW_VERSION_MAJ;
   payload[3] = FW_VERSION_MIN;
@@ -142,7 +142,7 @@ void SerialEncoding::h_reqTest(Knitter *knitter) {
   bool success = knitter->startTest();
 
   uint8_t payload[2];
-  payload[0] = cnfTest_msgid;
+  payload[0] = static_cast<uint8_t>(AYAB_API::cnfTest_msgid);
   payload[1] = static_cast<uint8_t>(success);
   send(payload, 2);
 }
@@ -155,20 +155,20 @@ static void h_unrecognized() {
  */
 void SerialEncoding::onPacketReceived(Knitter *knitter, const uint8_t *buffer,
                                       size_t size) {
-  switch (buffer[0]) {
-  case reqStart_msgid:
+  switch (static_cast<AYAB_API>(buffer[0])) {
+  case AYAB_API::reqStart_msgid:
     h_reqStart(knitter, buffer, size);
     break;
 
-  case cnfLine_msgid:
+  case AYAB_API::cnfLine_msgid:
     h_cnfLine(knitter, buffer, size);
     break;
 
-  case reqInfo_msgid:
+  case AYAB_API::reqInfo_msgid:
     h_reqInfo();
     break;
 
-  case reqTest_msgid:
+  case AYAB_API::reqTest_msgid:
     h_reqTest(knitter);
     break;
 
@@ -202,7 +202,7 @@ void SerialEncoding::requestLine(const uint8_t lineNumber) {
   // important. Maybe optimized out? The important line here is where we send
   // the payload. LCOV_EXCL_START
   const uint8_t payload[REQLINE_LEN] = {
-      reqLine_msgid,
+      static_cast<uint8_t>(AYAB_API::reqLine_msgid),
       lineNumber,
   };
   // LCOV_EXCL_STOP
@@ -221,7 +221,7 @@ void SerialEncoding::indicateState(uint8_t initState, uint16_t leftHallValue,
                                    uint8_t position, uint8_t direction) {
   constexpr uint8_t INDSTATE_LEN = 9U;
   const uint8_t payload[INDSTATE_LEN] = {
-      indState_msgid,
+      static_cast<uint8_t>(AYAB_API::indState_msgid),
       initState,
       highByte(leftHallValue),
       lowByte(leftHallValue),

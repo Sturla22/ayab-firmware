@@ -38,7 +38,7 @@ constexpr uint32_t SERIAL_BAUDRATE = 115200U;
 
 constexpr uint8_t LINEBUFFER_LEN = 25U;
 
-enum AYAB_API {
+enum class AYAB_API : uint8_t {
   reqStart_msgid = 0x01,
   cnfStart_msgid = 0xC1,
   reqLine_msgid = 0x82,
@@ -50,8 +50,6 @@ enum AYAB_API {
   indState_msgid = 0x84,
   debug_msgid = 0xFF
 };
-
-using AYAB_API_t = enum AYAB_API;
 
 class SerialEncoding {
 public:

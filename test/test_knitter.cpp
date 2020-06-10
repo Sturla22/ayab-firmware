@@ -52,8 +52,8 @@ protected:
   }
 
   // TODO(sl): m_position is only uint8_t, should it be bigger?
-  void expect_isr(uint16_t pos, Direction_t dir, Direction_t hall,
-                  Beltshift_t belt, Carriage_t carriage) {
+  void expect_isr(uint16_t pos, Direction dir, Direction hall, Beltshift belt,
+                  Carriage carriage) {
     EXPECT_CALL(*encodersMock, encA_interrupt);
     EXPECT_CALL(*encodersMock, getPosition).WillRepeatedly(Return(pos));
     EXPECT_CALL(*encodersMock, getDirection).WillRepeatedly(Return(dir));
@@ -61,22 +61,23 @@ protected:
     EXPECT_CALL(*encodersMock, getBeltshift).WillRepeatedly(Return(belt));
     EXPECT_CALL(*encodersMock, getCarriage).WillRepeatedly(Return(carriage));
   }
-  void expected_isr(uint16_t pos, Direction_t dir, Direction_t hall,
-                    Beltshift_t belt, Carriage_t carriage) {
+  void expected_isr(uint16_t pos, Direction dir, Direction hall, Beltshift belt,
+                    Carriage carriage) {
     expect_isr(pos, dir, hall, belt, carriage);
     k->isr();
   }
 
-  void expect_isr(Direction_t dir, Direction_t hall) {
-    expect_isr(1, dir, hall, Regular, G);
+  void expect_isr(Direction dir, Direction hall) {
+    expect_isr(1, dir, hall, Beltshift::Regular, Carriage::G);
   }
-  void expected_isr(Direction_t dir, Direction_t hall) {
+  void expected_isr(Direction dir, Direction hall) {
     expect_isr(dir, hall);
     k->isr();
   }
 
   void expect_isr(uint16_t pos) {
-    expect_isr(pos, Right, Left, Regular, G);
+    expect_isr(pos, Direction::Right, Direction::Left, Beltshift::Regular,
+               Carriage::G);
   }
 
   void expected_isr(uint16_t pos) {
@@ -90,8 +91,8 @@ protected:
 
   template <int times = 1> void expect_indState() {
     EXPECT_CALL(*serialEncodingMock, indicateState).Times(times);
-    EXPECT_CALL(*encodersMock, getHallValue(Left)).Times(times);
-    EXPECT_CALL(*encodersMock, getHallValue(Right)).Times(times);
+    EXPECT_CALL(*encodersMock, getHallValue(Direction::Left)).Times(times);
+    EXPECT_CALL(*encodersMock, getHallValue(Direction::Right)).Times(times);
     EXPECT_CALL(*encodersMock, getDirection).Times(times);
   }
 
@@ -148,7 +149,7 @@ protected:
  * \test
  */
 TEST_F(KnitterTest, test_constructor) {
-  ASSERT_EQ(k->getState(), s_init);
+  ASSERT_EQ(k->getState(), OpState::s_init);
   // NOTE: Probing private data!
   ASSERT_EQ(k->m_startNeedle, 0);
 }
@@ -176,7 +177,7 @@ TEST_F(KnitterTest, test_isr) {
  */
 TEST_F(KnitterTest, test_fsm_default_case) {
   // NOTE: Probing private data to be able to cover all branches.
-  k->m_opState = (OpState_t)4;
+  k->m_opState = (OpState)4;
   expected_fsm();
 }
 
@@ -185,21 +186,21 @@ TEST_F(KnitterTest, test_fsm_default_case) {
  */
 TEST_F(KnitterTest, test_fsm_init) {
   // Not ready
-  expected_isr(Left, Left);
+  expected_isr(Direction::Left, Direction::Left);
   expected_fsm();
-  ASSERT_EQ(k->getState(), s_init);
+  ASSERT_EQ(k->getState(), OpState::s_init);
 
   // Not now either
-  expected_isr(Right, Right);
+  expected_isr(Direction::Right, Direction::Right);
   expected_fsm();
-  ASSERT_EQ(k->getState(), s_init);
+  ASSERT_EQ(k->getState(), OpState::s_init);
 
   // Ready
-  expected_isr(Right, Left);
+  expected_isr(Direction::Right, Direction::Left);
   EXPECT_CALL(*solenoidsMock, setSolenoids(0xFFFF));
   expect_indState();
   expected_fsm();
-  ASSERT_EQ(k->getState(), s_ready);
+  ASSERT_EQ(k->getState(), OpState::s_ready);
 }
 
 /*!
@@ -210,13 +211,13 @@ TEST_F(KnitterTest, test_fsm_ready) {
   EXPECT_CALL(*arduinoMock, digitalWrite(LED_PIN_A, 0));
   expected_fsm();
   // Still in ready
-  ASSERT_EQ(k->getState(), s_ready);
+  ASSERT_EQ(k->getState(), OpState::s_ready);
 
   // Again
   EXPECT_CALL(*arduinoMock, digitalWrite(LED_PIN_A, 0));
   expected_fsm();
   // Still in ready
-  ASSERT_EQ(k->getState(), s_ready);
+  ASSERT_EQ(k->getState(), OpState::s_ready);
 }
 
 /*!
@@ -263,7 +264,7 @@ TEST_F(KnitterTest, test_startOperation) {
  */
 TEST_F(KnitterTest, test_startTest) {
   ASSERT_EQ(k->startTest(), true);
-  ASSERT_EQ(k->getState(), s_test);
+  ASSERT_EQ(k->getState(), OpState::s_test);
 }
 
 /*!
@@ -273,7 +274,7 @@ TEST_F(KnitterTest, test_startTest_in_operation) {
   get_to_operate();
   // Can't start test
   ASSERT_EQ(k->startTest(), false);
-  ASSERT_EQ(k->getState(), s_operate);
+  ASSERT_EQ(k->getState(), OpState::s_operate);
 }
 
 /*!
@@ -290,7 +291,7 @@ TEST_F(KnitterTest, test_setNextLine) {
   expected_isr(40 + NUM_NEEDLES - 1 + END_OF_LINE_OFFSET_R + 1);
   EXPECT_CALL(*solenoidsMock, setSolenoid).Times(1);
   expected_operate(false);
-  ASSERT_EQ(k->getState(), s_operate);
+  ASSERT_EQ(k->getState(), OpState::s_operate);
 
   // Wrong line number
   EXPECT_CALL(*beeperMock, finishedLine).Times(0);
@@ -337,7 +338,8 @@ TEST_F(KnitterTest, test_operate) {
   expected_operate(false);
 
   // No useful position calculated by calculatePixelAndSolenoid
-  expected_isr(100, NoDirection, Right, Shifted, G);
+  expected_isr(100, Direction::None, Direction::Right, Beltshift::Shifted,
+               Carriage::G);
   expect_indState();
   expected_operate(false);
 
@@ -403,7 +405,7 @@ TEST_F(KnitterTest, test_operate_lastline_and_no_req) {
   k->m_stopNeedle = 100;
   k->m_pixelToSet = k->m_stopNeedle + END_OF_LINE_OFFSET_R + 1;
   k->m_firstRun = false;
-  k->m_direction = Left;
+  k->m_direction = Direction::Left;
   k->m_workedOnLine = true;
   k->m_lineRequested = false;
   k->m_lastLineFlag = true;
@@ -414,9 +416,9 @@ TEST_F(KnitterTest, test_operate_lastline_and_no_req) {
   EXPECT_CALL(*beeperMock, finishedLine);
   k->state_operate();
 
-  ASSERT_EQ(k->getStartOffset(NUM_DIRECTIONS), 0);
-  k->m_carriage = NUM_CARRIAGES;
-  ASSERT_EQ(k->getStartOffset(Right), 0);
+  ASSERT_EQ(k->getStartOffset(Direction::NUM), 0);
+  k->m_carriage = Carriage::NUM;
+  ASSERT_EQ(k->getStartOffset(Direction::Right), 0);
 }
 
 /*!
@@ -459,35 +461,43 @@ TEST_F(KnitterTest, test_operate_new_line) {
  */
 TEST_F(KnitterTest, test_calculatePixelAndSolenoid) {
   // New Position, different beltshift and active hall
-  expected_isr(100, Right, Right, Shifted, L);
+  expected_isr(100, Direction::Right, Direction::Right, Beltshift::Shifted,
+               Carriage::L);
   expected_test(true);
 
   // No direction, need to change position to enter test
-  expected_isr(101, NoDirection, Right, Shifted, L);
+  expected_isr(101, Direction::None, Direction::Right, Beltshift::Shifted,
+               Carriage::L);
   expected_test(false);
 
   // No belt, need to change position to enter test
-  expected_isr(100, Right, Right, Unknown, L);
+  expected_isr(100, Direction::Right, Direction::Right, Beltshift::None,
+               Carriage::L);
   expected_test(false);
 
   // No belt on left side, need to change position to enter test
-  expected_isr(101, Left, Right, Unknown, G);
+  expected_isr(101, Direction::Left, Direction::Right, Beltshift::None,
+               Carriage::G);
   expected_test(false);
 
   // Left L carriage
-  expected_isr(100, Left, Right, Unknown, L);
+  expected_isr(100, Direction::Left, Direction::Right, Beltshift::None,
+               Carriage::L);
   expected_test(false);
 
   // Regular belt on left, need to change position to enter test
-  expected_isr(101, Left, Right, Regular, G);
+  expected_isr(101, Direction::Left, Direction::Right, Beltshift::Regular,
+               Carriage::G);
   expected_test(false);
 
   // Shifted belt on left, need to change position to enter test
-  expected_isr(100, Left, Right, Shifted, G);
+  expected_isr(100, Direction::Left, Direction::Right, Beltshift::Shifted,
+               Carriage::G);
   expected_test(false);
 
   // Off of right end, position is changed
-  expected_isr(END_RIGHT, Left, Right, Unknown, L);
+  expected_isr(END_RIGHT, Direction::Left, Direction::Right, Beltshift::None,
+               Carriage::L);
   expected_test(false);
 }
 
@@ -496,7 +506,7 @@ TEST_F(KnitterTest, test_calculatePixelAndSolenoid) {
  */
 TEST_F(KnitterTest, test_getStartOffset) {
   // NOTE: Probing private method to be able to cover all branches.
-  ASSERT_EQ(k->getStartOffset(NoDirection), 0);
+  ASSERT_EQ(k->getStartOffset(Direction::None), 0);
 }
 
 /*!

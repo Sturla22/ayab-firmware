@@ -39,9 +39,9 @@ TEST_F(EncodersTest, test_encA_rising_not_in_front) {
   EXPECT_CALL(*arduinoMock, analogRead(EOL_PIN_L))
       .WillOnce(Return(FILTER_L_MIN));
   e->encA_interrupt();
-  ASSERT_EQ(e->getDirection(), Right);
+  ASSERT_EQ(e->getDirection(), Direction::Right);
   ASSERT_EQ(e->getPosition(), 0x01);
-  ASSERT_EQ(e->getCarriage(), NoCarriage);
+  ASSERT_EQ(e->getCarriage(), Carriage::None);
 }
 
 TEST_F(EncodersTest, test_encA_rising_in_front) {
@@ -66,11 +66,11 @@ TEST_F(EncodersTest, test_encA_rising_in_front) {
 
   e->encA_interrupt();
 
-  ASSERT_EQ(e->getDirection(), Right);
-  ASSERT_EQ(e->getHallActive(), Left);
+  ASSERT_EQ(e->getDirection(), Direction::Right);
+  ASSERT_EQ(e->getHallActive(), Direction::Left);
   ASSERT_EQ(e->getPosition(), 28);
-  ASSERT_EQ(e->getCarriage(), L);
-  ASSERT_EQ(e->getBeltshift(), Regular);
+  ASSERT_EQ(e->getCarriage(), Carriage::L);
+  ASSERT_EQ(e->getBeltshift(), Beltshift::Regular);
 }
 
 TEST_F(EncodersTest, test_encA_rising_in_front_G_carriage) {
@@ -86,7 +86,7 @@ TEST_F(EncodersTest, test_encA_rising_in_front_G_carriage) {
 
   e->encA_interrupt();
 
-  ASSERT_EQ(e->getCarriage(), K);
+  ASSERT_EQ(e->getCarriage(), Carriage::K);
 
   // Create a falling edge
   EXPECT_CALL(*arduinoMock, digitalRead(ENC_PIN_A)).WillOnce(Return(false));
@@ -106,7 +106,7 @@ TEST_F(EncodersTest, test_encA_rising_in_front_G_carriage) {
 
   e->encA_interrupt();
 
-  ASSERT_EQ(e->getCarriage(), G);
+  ASSERT_EQ(e->getCarriage(), Carriage::G);
 }
 
 TEST_F(EncodersTest, test_encA_falling_not_in_front) {
@@ -156,11 +156,11 @@ TEST_F(EncodersTest, test_encA_falling_in_front) {
 
   e->encA_interrupt();
 
-  ASSERT_EQ(e->getDirection(), Left);
-  ASSERT_EQ(e->getHallActive(), Right);
+  ASSERT_EQ(e->getDirection(), Direction::Left);
+  ASSERT_EQ(e->getHallActive(), Direction::Right);
   ASSERT_EQ(e->getPosition(), 227);
-  ASSERT_EQ(e->getCarriage(), NoCarriage);
-  ASSERT_EQ(e->getBeltshift(), Shifted);
+  ASSERT_EQ(e->getCarriage(), Carriage::None);
+  ASSERT_EQ(e->getBeltshift(), Beltshift::Shifted);
 }
 
 TEST_F(EncodersTest, test_encA_falling_at_end) {
@@ -227,7 +227,7 @@ TEST_F(EncodersTest, test_encA_falling_set_K_carriage) {
   EXPECT_CALL(*arduinoMock, digitalRead(ENC_PIN_C));
 
   e->encA_interrupt();
-  ASSERT_EQ(e->getCarriage(), K);
+  ASSERT_EQ(e->getCarriage(), Carriage::K);
 }
 #endif
 
@@ -255,35 +255,35 @@ TEST_F(EncodersTest, test_getPosition) {
 }
 
 TEST_F(EncodersTest, test_getBeltshift) {
-  Beltshift_t b = e->getBeltshift();
-  ASSERT_EQ(b, Unknown);
+  Beltshift b = e->getBeltshift();
+  ASSERT_EQ(b, Beltshift::None);
 }
 
 TEST_F(EncodersTest, test_getDirection) {
-  Direction_t d = e->getDirection();
-  ASSERT_EQ(d, NoDirection);
+  Direction d = e->getDirection();
+  ASSERT_EQ(d, Direction::None);
 }
 
 TEST_F(EncodersTest, test_getHallActive) {
-  Direction_t d = e->getHallActive();
-  ASSERT_EQ(d, NoDirection);
+  Direction d = e->getHallActive();
+  ASSERT_EQ(d, Direction::None);
 }
 
 TEST_F(EncodersTest, test_getCarriage) {
-  Carriage_t c = e->getCarriage();
-  ASSERT_EQ(c, NoCarriage);
+  Carriage c = e->getCarriage();
+  ASSERT_EQ(c, Carriage::None);
 }
 
 TEST_F(EncodersTest, test_getHallValue) {
-  uint16_t v = e->getHallValue(NoDirection);
+  uint16_t v = e->getHallValue(Direction::None);
   ASSERT_EQ(v, 0u);
   EXPECT_CALL(*arduinoMock, analogRead(EOL_PIN_L));
-  v = e->getHallValue(Left);
+  v = e->getHallValue(Direction::Left);
   ASSERT_EQ(v, 0u);
   EXPECT_CALL(*arduinoMock, analogRead(EOL_PIN_R));
-  v = e->getHallValue(Right);
+  v = e->getHallValue(Direction::Right);
   ASSERT_EQ(v, 0u);
   EXPECT_CALL(*arduinoMock, analogRead(EOL_PIN_R)).WillOnce(Return(0xbeefu));
-  v = e->getHallValue(Right);
+  v = e->getHallValue(Direction::Right);
   ASSERT_EQ(v, 0xbeefu);
 }

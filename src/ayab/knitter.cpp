@@ -34,11 +34,12 @@ constexpr uint8_t UINT8_MAX = 0xFFU;
 constexpr uint16_t UINT16_MAX = 0xFFFFU;
 #endif
 
-constexpr uint8_t startOffsetLUT[NUM_DIRECTIONS][NUM_CARRIAGES] = {
-    // NC,  K,  L,  G
-    {0, 0, 0, 0},    // NoDirection
-    {0, 40, 40, 8},  // Left
-    {0, 16, 16, 32}, // Right
+constexpr uint8_t startOffsetLUT[static_cast<uint16_t>(Direction::NUM)]
+                                [static_cast<uint16_t>(Carriage::NUM)] = {
+                                    // NC,  K,  L,  G
+                                    {0, 0, 0, 0},    // NoDirection
+                                    {0, 40, 40, 8},  // Left
+                                    {0, 16, 16, 32}, // Right
 };
 
 /*!
@@ -58,7 +59,7 @@ Knitter::Knitter()
 #endif
 }
 
-auto Knitter::getState() -> OpState_t {
+auto Knitter::getState() -> OpState {
   return m_opState;
 }
 
@@ -78,17 +79,17 @@ void Knitter::isr() {
 
 void Knitter::fsm() {
   switch (m_opState) {
-  case s_init:
+  case OpState::s_init:
     if (init_guard()) {
       state_init();
     }
     break;
 
-  case s_ready:
+  case OpState::s_ready:
     state_ready();
     break;
 
-  case s_operate:
+  case OpState::s_operate:
     digitalWrite(LED_PIN_A, 1);
 
     if (m_firstRun) {
@@ -105,7 +106,7 @@ void Knitter::fsm() {
 #endif
     break;
 
-  case s_test:
+  case OpState::s_test:
     state_test();
     break;
 
@@ -131,9 +132,9 @@ auto Knitter::startOperation(uint8_t startNeedle, uint8_t stopNeedle,
 
   // TODO(sl): Check ok after removed always true comparison.
   if (stopNeedle < NUM_NEEDLES && startNeedle < stopNeedle) {
-    if (s_ready == m_opState) {
+    if (OpState::s_ready == m_opState) {
       // Proceed to next state
-      m_opState = s_operate;
+      m_opState = OpState::s_operate;
       // Assign image width
       m_startNeedle = startNeedle;
       m_stopNeedle = stopNeedle;
@@ -158,8 +159,8 @@ auto Knitter::startOperation(uint8_t startNeedle, uint8_t stopNeedle,
 
 auto Knitter::startTest() -> bool {
   bool success = false;
-  if (s_init == m_opState || s_ready == m_opState) {
-    m_opState = s_test;
+  if (OpState::s_init == m_opState || OpState::s_ready == m_opState) {
+    m_opState = OpState::s_test;
     success = true;
   }
   return success;
@@ -195,12 +196,12 @@ bool Knitter::init_guard() {
   return accept;
 #else
   // Machine is initialized when left hall sensor is passed in Right direction
-  return (Right == m_direction && Left == m_hallActive);
+  return (Direction::Right == m_direction && Direction::Left == m_hallActive);
 #endif // DBG_NOMACHINE
 }
 
 void Knitter::state_init() {
-  m_opState = s_ready;
+  m_opState = OpState::s_ready;
   m_solenoids.setSolenoids(UINT16_MAX);
   indState(true);
 }
@@ -288,7 +289,7 @@ void Knitter::state_operate() {
     m_workedOnLine = false;
 
     if (m_lastLineFlag) {
-      m_opState = s_ready;
+      m_opState = OpState::s_ready;
       finishedWork();
       // TODO(sl): Reset m_firstRun to true? Or does that belong in
       // startOperation?
@@ -315,18 +316,18 @@ auto Knitter::calculatePixelAndSolenoid() -> bool {
   // Magic numbers result from machine manual
   // TODO(sl): 16 is number of solenoids? 8 is half? Replace with named
   // constant.
-  case Right:
-    startOffset = getStartOffset(Left);
+  case Direction::Right:
+    startOffset = getStartOffset(Direction::Left);
     if (m_position >= startOffset) {
       m_pixelToSet = m_position - startOffset;
 
-      if (Regular == m_beltshift) {
+      if (Beltshift::Regular == m_beltshift) {
         m_solenoidToSet = m_position % 16;
-      } else if (Shifted == m_beltshift) {
+      } else if (Beltshift::Shifted == m_beltshift) {
         m_solenoidToSet = (m_position - 8) % 16;
       }
 
-      if (L == m_carriage) {
+      if (Carriage::L == m_carriage) {
         m_pixelToSet = m_pixelToSet + 8;
       }
     } else {
@@ -334,18 +335,18 @@ auto Knitter::calculatePixelAndSolenoid() -> bool {
     }
     break;
 
-  case Left:
-    startOffset = getStartOffset(Right);
+  case Direction::Left:
+    startOffset = getStartOffset(Direction::Right);
     if (m_position <= (END_RIGHT - startOffset)) {
       m_pixelToSet = m_position - startOffset;
 
-      if (Regular == m_beltshift) {
+      if (Beltshift::Regular == m_beltshift) {
         m_solenoidToSet = (m_position + 8) % 16;
-      } else if (Shifted == m_beltshift) {
+      } else if (Beltshift::Shifted == m_beltshift) {
         m_solenoidToSet = m_position % 16;
       }
 
-      if (L == m_carriage) {
+      if (Carriage::L == m_carriage) {
         m_pixelToSet = m_pixelToSet - 16;
       }
     } else {
@@ -360,12 +361,13 @@ auto Knitter::calculatePixelAndSolenoid() -> bool {
   return success;
 }
 
-auto Knitter::getStartOffset(const Direction_t direction) -> uint8_t {
-  if (direction >= NUM_DIRECTIONS || m_carriage >= NUM_CARRIAGES) {
+auto Knitter::getStartOffset(const Direction direction) -> uint8_t {
+  if (direction >= Direction::NUM || m_carriage >= Carriage::NUM) {
     return 0U;
   }
 
-  return startOffsetLUT[direction][m_carriage];
+  return startOffsetLUT[static_cast<uint16_t>(direction)]
+                       [static_cast<uint16_t>(m_carriage)];
 }
 
 void Knitter::reqLine(const uint8_t lineNumber) {
@@ -375,8 +377,8 @@ void Knitter::reqLine(const uint8_t lineNumber) {
 
 void Knitter::indState(const bool initState) {
   m_serial_encoding.indicateState(
-      static_cast<uint8_t>(initState), Encoders::getHallValue(Left),
-      Encoders::getHallValue(Right),
+      static_cast<uint8_t>(initState), Encoders::getHallValue(Direction::Left),
+      Encoders::getHallValue(Direction::Right),
       static_cast<uint8_t>(m_encoders.getCarriage()),
       static_cast<uint8_t>(m_encoders.getPosition()),
       static_cast<uint8_t>(m_encoders.getDirection()));

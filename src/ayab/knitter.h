@@ -34,9 +34,7 @@ constexpr uint8_t NUM_NEEDLES = 200U;
 constexpr uint8_t END_OF_LINE_OFFSET_L = 12U;
 constexpr uint8_t END_OF_LINE_OFFSET_R = 12U;
 
-enum OpState { s_init, s_ready, s_operate, s_test };
-
-using OpState_t = enum OpState;
+enum class OpState : uint8_t { s_init, s_ready, s_operate, s_test };
 
 /*!
  * \brief The knitting finite state machine.
@@ -62,7 +60,7 @@ public:
   auto setNextLine(uint8_t lineNumber) -> bool;
   void setLastLine();
 
-  auto getState() -> OpState_t;
+  auto getState() -> OpState;
   void send(uint8_t *payload, size_t length);
   void onPacketReceived(const uint8_t *buffer, size_t size);
 
@@ -72,7 +70,7 @@ private:
   SerialEncoding m_serial_encoding;
   Solenoids m_solenoids;
 
-  OpState_t m_opState = s_init;
+  OpState m_opState = OpState::s_init;
 
   bool m_lastLineFlag = false;
 
@@ -86,10 +84,10 @@ private:
 
   // current machine state
   uint8_t m_position = 0U;
-  Direction_t m_direction = NoDirection;
-  Direction_t m_hallActive = NoDirection;
-  Beltshift_t m_beltshift = Unknown;
-  Carriage_t m_carriage = NoCarriage;
+  Direction m_direction = Direction::None;
+  Direction m_hallActive = Direction::None;
+  Beltshift m_beltshift = Beltshift::None;
+  Carriage m_carriage = Carriage::None;
 
   uint8_t m_sOldPosition = 0U;
   bool m_firstRun = true;
@@ -114,7 +112,7 @@ private:
   uint8_t first_operate(uint8_t currentLineNumber);
 
   auto calculatePixelAndSolenoid() -> bool;
-  auto getStartOffset(Direction_t direction) -> uint8_t;
+  auto getStartOffset(Direction direction) -> uint8_t;
 
   void reqLine(uint8_t lineNumber);
   void indState(bool initState = false);

@@ -27,23 +27,23 @@ uint8_t Encoders::getPosition() const {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getPosition();
 }
-Beltshift_t Encoders::getBeltshift() {
+Beltshift Encoders::getBeltshift() {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getBeltshift();
 }
-Direction_t Encoders::getDirection() {
+Direction Encoders::getDirection() {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getDirection();
 }
-Direction_t Encoders::getHallActive() {
+Direction Encoders::getHallActive() {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getHallActive();
 }
-Carriage_t Encoders::getCarriage() {
+Carriage Encoders::getCarriage() {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getCarriage();
 }
-uint16_t Encoders::getHallValue(Direction_t dir) {
+uint16_t Encoders::getHallValue(Direction dir) {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getHallValue(dir);
 }

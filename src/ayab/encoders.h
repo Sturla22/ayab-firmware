@@ -46,23 +46,17 @@ constexpr uint8_t END_LEFT = 0U;
 constexpr uint8_t END_RIGHT = 255U;
 constexpr uint8_t END_OFFSET = 28;
 
-enum Direction { NoDirection, Left, Right, NUM_DIRECTIONS };
+enum class Direction : uint8_t { None, Left, Right, NUM };
 
-enum Carriage { NoCarriage, K, L, G, NUM_CARRIAGES };
-enum Beltshift {
-  Unknown,
+enum class Carriage : uint8_t { None, K, L, G, NUM };
+enum class Beltshift : uint8_t {
+  None,
   Regular,
   Shifted,
   Lace_Regular,
   Lace_Shifted,
-  NUM_BELTSHIFTS
+  NUM
 };
-
-using Direction_t = enum Direction;
-
-using Carriage_t = enum Carriage;
-
-using Beltshift_t = enum Beltshift;
 
 /*!
  * \brief Encoder interface.
@@ -77,18 +71,18 @@ public:
   static void callback();
 
   auto getPosition() const -> uint8_t;
-  auto getBeltshift() -> Beltshift_t;
-  auto getDirection() -> Direction_t;
-  auto getHallActive() -> Direction_t;
-  auto getCarriage() -> Carriage_t;
+  auto getBeltshift() -> Beltshift;
+  auto getDirection() -> Direction;
+  auto getHallActive() -> Direction;
+  auto getCarriage() -> Carriage;
 
-  static auto getHallValue(Direction_t pSensor) -> uint16_t;
+  static auto getHallValue(Direction pSensor) -> uint16_t;
 
 private:
-  Direction_t m_direction = NoDirection;
-  Direction_t m_hallActive = NoDirection;
-  Beltshift_t m_beltShift = Unknown;
-  Carriage_t m_carriage = NoCarriage;
+  Direction m_direction = Direction::None;
+  Direction m_hallActive = Direction::None;
+  Beltshift m_beltShift = Beltshift::None;
+  Carriage m_carriage = Carriage::None;
   uint8_t m_encoderPos = 0x00;
   bool m_oldState = false;
 
