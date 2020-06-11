@@ -11,7 +11,8 @@ public:
   MOCK_METHOD0(getDirection, Direction());
   MOCK_METHOD0(getHallActive, Direction());
   MOCK_METHOD0(getCarriage, Carriage());
-  MOCK_METHOD1(getHallValue, uint16_t(Direction));
+  MOCK_METHOD1(getHallValue, uint16_t(Direction direction));
+  MOCK_METHOD1(setMachine, void(Machine machine));
 };
 
 EncodersMock *encodersMockInstance();

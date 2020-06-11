@@ -3,6 +3,24 @@
 #include <board.h>
 #include <encoders.h>
 
+#if defined(KH910) || defined(AYAB_HW_TEST)
+Machine m = Machine::kh910;
+constexpr uint16_t FILTER_L_MIN = 200U; // below: L Carriage
+constexpr uint16_t FILTER_L_MAX = 600U; // above: K Carriage
+constexpr uint16_t FILTER_R_MIN = 200U;
+constexpr uint16_t FILTER_R_MAX = 1023U;
+#elif defined(KH930)
+Machine m = Machine::kh930;
+constexpr uint16_t FILTER_L_MIN = 200U; // below: L Carriage
+constexpr uint16_t FILTER_L_MAX = 600U; // above: K Carriage
+constexpr uint16_t FILTER_R_MIN = 0U;
+constexpr uint16_t FILTER_R_MAX = 600U;
+#elif defined(AYAB_TESTS)
+// No error when running tests
+#else
+#error "KH910 or KH930 has to be defined as a preprocessor variable!"
+#endif
+
 using ::testing::Return;
 
 class EncodersTest : public ::testing::Test {
@@ -13,6 +31,7 @@ protected:
     EXPECT_CALL(*arduinoMock, pinMode(ENC_PIN_B, INPUT));
     EXPECT_CALL(*arduinoMock, pinMode(ENC_PIN_C, INPUT));
     e = new Encoders();
+    e->setMachine(m);
   }
 
   void TearDown() override {
@@ -22,6 +41,10 @@ protected:
   ArduinoMock *arduinoMock;
   Encoders *e;
 };
+
+TEST_F(EncodersTest, setMachine) {
+  e->setMachine(m);
+}
 
 TEST_F(EncodersTest, test_encA_rising_not_in_front) {
   // We should not enter the falling function

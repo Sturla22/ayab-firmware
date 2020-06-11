@@ -47,3 +47,7 @@ uint16_t Encoders::getHallValue(Direction dir) {
   assert(gEncodersMock != NULL);
   return gEncodersMock->getHallValue(dir);
 }
+void Encoders::setMachine(Machine machine) {
+  assert(gEncodersMock != NULL);
+  return gEncodersMock->setMachine(machine);
+}

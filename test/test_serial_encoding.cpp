@@ -34,10 +34,13 @@ TEST_F(SerialEncodingTest, test_testmsg) {
 }
 
 TEST_F(SerialEncodingTest, test_startmsg) {
-  uint8_t buffer[] = {static_cast<uint8_t>(AYAB_API::reqStart_msgid), 0, 0, 0};
+  uint8_t buffer[] = {static_cast<uint8_t>(AYAB_API::reqStart_msgid), 0, 0, 0,
+                      static_cast<uint8_t>(Machine::None)};
+  EXPECT_CALL(*knitterMock, startOperation);
   s->onPacketReceived(knitter, buffer, sizeof(buffer));
 
   // Not enough bytes
+  EXPECT_CALL(*knitterMock, startOperation).Times(0);
   s->onPacketReceived(knitter, buffer, sizeof(buffer) - 1);
 }
 

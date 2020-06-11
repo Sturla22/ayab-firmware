@@ -24,28 +24,12 @@
 
 #include <Arduino.h>
 
-// Should be calibrated to each device
-// These values are for the K carriage
-#if defined(KH910) || defined(AYAB_HW_TEST)
-constexpr uint16_t FILTER_L_MIN = 200U; // below: L Carriage
-constexpr uint16_t FILTER_L_MAX = 600U; // above: K Carriage
-constexpr uint16_t FILTER_R_MIN = 200U;
-constexpr uint16_t FILTER_R_MAX = 1023U;
-#elif defined(KH930)
-constexpr uint16_t FILTER_L_MIN = 200U; // below: L Carriage
-constexpr uint16_t FILTER_L_MAX = 600U; // above: K Carriage
-constexpr uint16_t FILTER_R_MIN = 0U;
-constexpr uint16_t FILTER_R_MAX = 600U;
-#elif defined(AYAB_TESTS)
-// No error when running tests
-#else
-#error "KH910 or KH930 has to be defined as a preprocessor variable!"
-#endif
-
 constexpr uint8_t END_LEFT = 0U;
 constexpr uint8_t END_RIGHT = 255U;
 constexpr uint8_t END_OFFSET = 28;
 
+// TODO(sl): Add kh270 when filter values have been determined.
+enum class Machine : uint8_t { None, kh910, kh930, NUM };
 enum class Direction : uint8_t { None, Left, Right, NUM };
 
 enum class Carriage : uint8_t { None, K, L, G, NUM };
@@ -57,6 +41,52 @@ enum class Beltshift : uint8_t {
   Lace_Shifted,
   NUM
 };
+
+struct Filter {
+  uint16_t min;
+  uint16_t max;
+
+  bool isBelow(uint16_t val) const {
+    return val < min;
+  }
+  bool isAbove(uint16_t val) const {
+    return val > max;
+  }
+  bool isOutside(uint16_t val) const {
+    return isBelow(val) || isAbove(val);
+  }
+  bool isInside(uint16_t val) const {
+    return !isOutside(val);
+  }
+};
+
+struct MachineFilters {
+  Filter right;
+  Filter left;
+
+  const Filter getDirection(Direction dir) const {
+    if (dir == Direction::Right) {
+      return right;
+    } else if (dir == Direction::Left) {
+      return left;
+    }
+    return {0, 0};
+  }
+
+  bool isBelow(Direction dir, uint16_t val) const {
+    return getDirection(dir).isBelow(val);
+  }
+
+  bool isOutside(Direction dir, uint16_t val) const {
+    return getDirection(dir).isOutside(val);
+  }
+};
+
+// Should be calibrated to each device
+// These values are for the K carriage
+constexpr MachineFilters kh910Filters = {{200, 1023}, {200, 600}};
+
+constexpr MachineFilters kh930Filters = {{0, 600}, {200, 600}};
 
 /*!
  * \brief Encoder interface.
@@ -76,9 +106,13 @@ public:
   auto getHallActive() const -> Direction;
   auto getCarriage() const -> Carriage;
 
+  void setMachine(Machine machine);
+
   static auto getHallValue(Direction pSensor) -> uint16_t;
 
 private:
+  MachineFilters m_machineFilters = {{0, 0}, {0, 0}};
+
   Direction m_direction = Direction::None;
   Direction m_hallActive = Direction::None;
   Beltshift m_beltShift = Beltshift::None;

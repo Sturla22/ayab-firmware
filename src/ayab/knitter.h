@@ -54,7 +54,7 @@ public:
 
   void isr();
   void fsm();
-  auto startOperation(uint8_t startNeedle, uint8_t stopNeedle,
+  auto startOperation(Machine machine, uint8_t startNeedle, uint8_t stopNeedle,
                       bool continuousReportingEnabled, uint8_t *line) -> bool;
   auto startTest() -> bool;
   auto setNextLine(uint8_t lineNumber) -> bool;

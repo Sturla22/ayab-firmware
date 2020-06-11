@@ -122,10 +122,14 @@ void Knitter::fsm() {
  * \todo sl: Check that functionality is correct after removing always true
  * comparison.
  */
-auto Knitter::startOperation(uint8_t startNeedle, uint8_t stopNeedle,
+auto Knitter::startOperation(Machine machine, uint8_t startNeedle,
+                             uint8_t stopNeedle,
                              bool continuousReportingEnabled, uint8_t *line)
     -> bool {
   bool success = false;
+
+  m_encoders.setMachine(machine);
+
   if (line == nullptr) {
     return success;
   }

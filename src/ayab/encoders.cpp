@@ -105,6 +105,22 @@ auto Encoders::getHallValue(Direction pSensor) -> uint16_t {
   }
 }
 
+/*!
+ * \brief Set the type of machine for filters.
+ */
+void Encoders::setMachine(Machine machine) {
+  switch (machine) {
+  case Machine::kh910:
+    m_machineFilters = kh910Filters;
+    break;
+  case Machine::kh930:
+    m_machineFilters = kh930Filters;
+    break;
+  default:
+    break;
+  }
+}
+
 /* Private Methods */
 
 /*!
@@ -124,11 +140,11 @@ void Encoders::encA_rising() {
 
   // In front of Left Hall Sensor?
   uint16_t hallValue = analogRead(EOL_PIN_L);
-  if (hallValue < FILTER_L_MIN || hallValue > FILTER_L_MAX) {
+  if (m_machineFilters.isOutside(Direction::Left, hallValue)) {
     m_hallActive = Direction::Left;
 
     // TODO(chris): Verify these decisions!
-    if (hallValue < FILTER_L_MIN) {
+    if (m_machineFilters.isBelow(Direction::Left, hallValue)) {
       if (m_carriage == Carriage::K /*&& m_encoderPos == ?? */) {
         m_carriage = Carriage::G;
       } else {
@@ -161,17 +177,10 @@ void Encoders::encA_falling() {
   // In front of Right Hall Sensor?
   uint16_t hallValue = analogRead(EOL_PIN_R);
 
-  // Avoid 'comparison of unsigned expression < 0 is always false'
-  // by being explicit about that behaviour being expected.
-  bool hallValueSmall = false;
-#if FILTER_R_MIN != 0
-  hallValueSmall = (hallValue < FILTER_R_MIN);
-#endif
-
-  if (hallValueSmall || hallValue > FILTER_R_MAX) {
+  if (m_machineFilters.isOutside(Direction::Right, hallValue)) {
     m_hallActive = Direction::Right;
 
-    if (hallValueSmall) {
+    if (m_machineFilters.isBelow(Direction::Right, hallValue)) {
       m_carriage = Carriage::K;
     }
 

@@ -31,18 +31,20 @@
 /*!
  * \brief Handle start request command.
  *
- * \todo sl: Assert size? Handle error?
+ * \todo sl: Handle error?
  */
 void SerialEncoding::h_reqStart(Knitter *knitter, const uint8_t *buffer,
                                 size_t size) {
-  if (size < 4U) {
-    // Need 4 bytes from buffer below.
+  if (size != 5U) {
+    // Need 5 bytes from buffer below.
     return;
   }
 
   uint8_t startNeedle = buffer[1];
   uint8_t stopNeedle = buffer[2];
   bool continuousReportingEnabled = static_cast<bool>(buffer[3]);
+
+  Machine machine = static_cast<Machine>(buffer[4]);
 
   // TODO(who?): verify operation
   // memset(lineBuffer,0,sizeof(lineBuffer));
@@ -52,7 +54,7 @@ void SerialEncoding::h_reqStart(Knitter *knitter, const uint8_t *buffer,
   }
 
   bool success = knitter->startOperation(
-      startNeedle, stopNeedle, continuousReportingEnabled, lineBuffer);
+      machine, startNeedle, stopNeedle, continuousReportingEnabled, lineBuffer);
 
   uint8_t payload[2];
   payload[0] = static_cast<uint8_t>(AYAB_API::cnfStart_msgid);
