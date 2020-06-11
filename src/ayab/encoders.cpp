@@ -48,10 +48,8 @@ void Encoders::encA_interrupt() {
 
   bool currentState = static_cast<bool>(digitalRead(ENC_PIN_A));
 
-  if (!m_oldState && currentState) {
-    encA_rising();
-  } else if (m_oldState && !currentState) {
-    encA_falling();
+  if (m_oldState != currentState) {
+    update(currentState);
   }
   m_oldState = currentState;
 }
@@ -123,28 +121,76 @@ void Encoders::setMachine(Machine machine) {
 
 /* Private Methods */
 
+void Encoders::updateBeltshift() {
+  bool enc_c = digitalRead(ENC_PIN_C) != LOW;
+  if (m_hallActive == Direction::Left) {
+    m_beltShift = (enc_c ? Beltshift::Regular : Beltshift::Shifted);
+  } else if (m_hallActive == Direction::Right) {
+    m_beltShift = enc_c ? Beltshift::Shifted : Beltshift::Regular;
+  }
+}
+
+void Encoders::updatePosition(bool rising) {
+  if (!rising && m_direction == Direction::Left && m_encoderPos > END_LEFT) {
+    m_encoderPos--;
+  } else if (rising && m_direction == Direction::Right &&
+             m_encoderPos < END_RIGHT) {
+    m_encoderPos++;
+  }
+}
+
+uint16_t Encoders::updateHallActive(bool rising) {
+  Direction dir;
+  uint8_t pin;
+  if (rising) {
+    dir = Direction::Left;
+    pin = EOL_PIN_L;
+  } else {
+    dir = Direction::Right;
+    pin = EOL_PIN_R;
+  }
+  uint16_t hallValue = analogRead(pin);
+  if (m_machineFilters.isOutside(dir, hallValue)) {
+    m_hallActive = dir;
+  }
+  return hallValue;
+}
+
+void Encoders::updateDirection() {
+  bool enc_b = digitalRead(ENC_PIN_B) != LOW;
+  m_direction = ((enc_b) ? Direction::Right : Direction::Left);
+}
+
+void Encoders::update(bool rising) {
+  if (rising) {
+    // Direction only decided on rising edge of encoder A
+    updateDirection();
+  }
+  updatePosition(rising);
+  uint16_t hallValue = updateHallActive(rising);
+  if (rising && m_hallActive == Direction::Left) {
+    updateCarriage(rising, hallValue);
+    // Belt shift signal only decided in front of hall sensor
+    updateBeltshift();
+    // Known position of the carriage -> overwrite position
+    m_encoderPos = END_LEFT + END_OFFSET;
+  } else if (!rising && m_hallActive == Direction::Right) {
+    updateCarriage(rising, hallValue);
+    // Belt shift signal only decided in front of hall sensor
+    updateBeltshift();
+    // Known position of the carriage -> overwrite position
+    m_encoderPos = END_RIGHT - END_OFFSET;
+  }
+}
+
 /*!
  *
  */
-void Encoders::encA_rising() {
-  // Direction only decided on rising edge of encoder A
-  m_direction =
-      digitalRead(ENC_PIN_B) != 0 ? Direction::Right : Direction::Left;
-
-  // Update carriage position
-  if (Direction::Right == m_direction) {
-    if (m_encoderPos < END_RIGHT) {
-      m_encoderPos++;
-    }
-  }
-
-  // In front of Left Hall Sensor?
-  uint16_t hallValue = analogRead(EOL_PIN_L);
-  if (m_machineFilters.isOutside(Direction::Left, hallValue)) {
-    m_hallActive = Direction::Left;
-
+void Encoders::updateCarriage(bool rising, uint16_t hallValue) {
+  bool below = m_machineFilters.isBelow(m_hallActive, hallValue);
+  if (rising) {
     // TODO(chris): Verify these decisions!
-    if (m_machineFilters.isBelow(Direction::Left, hallValue)) {
+    if (below) {
       if (m_carriage == Carriage::K /*&& m_encoderPos == ?? */) {
         m_carriage = Carriage::G;
       } else {
@@ -153,42 +199,9 @@ void Encoders::encA_rising() {
     } else {
       m_carriage = Carriage::K;
     }
-
-    // Belt shift signal only decided in front of hall sensor
-    m_beltShift =
-        digitalRead(ENC_PIN_C) != 0 ? Beltshift::Regular : Beltshift::Shifted;
-
-    // Known position of the carriage -> overwrite position
-    m_encoderPos = END_LEFT + END_OFFSET;
-  }
-}
-
-/*!
- *
- */
-void Encoders::encA_falling() {
-  // Update carriage position
-  if (Direction::Left == m_direction) {
-    if (m_encoderPos > END_LEFT) {
-      m_encoderPos--;
-    }
-  }
-
-  // In front of Right Hall Sensor?
-  uint16_t hallValue = analogRead(EOL_PIN_R);
-
-  if (m_machineFilters.isOutside(Direction::Right, hallValue)) {
-    m_hallActive = Direction::Right;
-
-    if (m_machineFilters.isBelow(Direction::Right, hallValue)) {
+  } else {
+    if (below) {
       m_carriage = Carriage::K;
     }
-
-    // Belt shift signal only decided in front of hall sensor
-    m_beltShift =
-        digitalRead(ENC_PIN_C) != 0 ? Beltshift::Shifted : Beltshift::Regular;
-
-    // Known position of the carriage -> overwrite position
-    m_encoderPos = END_RIGHT - END_OFFSET;
   }
 }

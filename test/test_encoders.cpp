@@ -214,7 +214,8 @@ TEST_F(EncodersTest, test_encA_falling_at_end) {
     EXPECT_CALL(*arduinoMock, analogRead(EOL_PIN_L))
         .WillOnce(Return(FILTER_L_MAX));
     e->encA_interrupt();
-    ASSERT_EQ(e->getPosition(), ++pos);
+    pos++;
+    ASSERT_EQ(e->getPosition(), pos);
 
     // Falling
     EXPECT_CALL(*arduinoMock, digitalRead(ENC_PIN_A)).WillOnce(Return(false));
@@ -234,7 +235,6 @@ TEST_F(EncodersTest, test_encA_falling_at_end) {
   ASSERT_EQ(e->getPosition(), pos);
 }
 
-#if FILTER_R_MIN != 0
 TEST_F(EncodersTest, test_encA_falling_set_K_carriage) {
   // Create a rising edge
   EXPECT_CALL(*arduinoMock, digitalRead(ENC_PIN_A)).WillOnce(Return(true));
@@ -250,9 +250,10 @@ TEST_F(EncodersTest, test_encA_falling_set_K_carriage) {
   EXPECT_CALL(*arduinoMock, digitalRead(ENC_PIN_C));
 
   e->encA_interrupt();
-  ASSERT_EQ(e->getCarriage(), Carriage::K);
+  if (m == Machine::kh910) {
+    ASSERT_EQ(e->getCarriage(), Carriage::K);
+  }
 }
-#endif
 
 TEST_F(EncodersTest, test_encA_falling_not_at_end) {
   // rising, direction is left
@@ -309,4 +310,31 @@ TEST_F(EncodersTest, test_getHallValue) {
   EXPECT_CALL(*arduinoMock, analogRead(EOL_PIN_R)).WillOnce(Return(0xbeefu));
   v = e->getHallValue(Direction::Right);
   ASSERT_EQ(v, 0xbeefu);
+}
+
+TEST_F(EncodersTest, setMachineNone) {
+  e->setMachine(Machine::None);
+}
+
+TEST_F(EncodersTest, updateBeltshiftNoDir) {
+  e->m_hallActive = Direction::None;
+  e->updateBeltshift();
+}
+
+TEST(MachineFilters, noDirection) {
+  MachineFilters mf = {{0, 0}, {0, 0}};
+  Filter f = mf.getDirection(Direction::None);
+  ASSERT_EQ(f.min, 0);
+  ASSERT_EQ(f.max, 0);
+
+  mf = {{1, 2}, {3, 4}};
+  Filter f1 = mf.getDirection(Direction::Right);
+  ASSERT_EQ(f1.min, 1);
+  ASSERT_EQ(f1.max, 2);
+  Filter f2 = mf.getDirection(Direction::Left);
+  ASSERT_EQ(f2.min, 3);
+  ASSERT_EQ(f2.max, 4);
+  Filter f3 = mf.getDirection(static_cast<Direction>(3));
+  ASSERT_EQ(f3.min, 0);
+  ASSERT_EQ(f3.max, 0);
 }

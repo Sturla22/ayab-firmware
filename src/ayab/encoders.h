@@ -67,7 +67,7 @@ struct MachineFilters {
   const Filter getDirection(Direction dir) const {
     if (dir == Direction::Right) {
       return right;
-    } else if (dir == Direction::Left) {
+    } else if (dir == Direction::Left) { // LCOV_EXCL_LINE
       return left;
     }
     return {0, 0};
@@ -95,6 +95,9 @@ constexpr MachineFilters kh930Filters = {{0, 600}, {200, 600}};
  */
 class Encoders {
 public:
+#ifdef AYAB_TESTS
+  FRIEND_TEST(EncodersTest, updateBeltshiftNoDir);
+#endif
   Encoders();
 
   void encA_interrupt();
@@ -122,4 +125,12 @@ private:
 
   void encA_rising();
   void encA_falling();
+
+  void updateBeltshift();
+  void updatePosition(bool rising);
+  uint16_t updateHallActive(bool rising);
+  void updateCarriage(bool rising, uint16_t hallValue);
+  void updateDirection();
+
+  void update(bool rising);
 };
